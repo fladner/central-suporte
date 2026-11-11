@@ -1,0 +1,23 @@
+{{template "topo" .}}
+<h1>Ferramentas de suporte</h1>
+{{if .Itens}}
+<ul class="itens">
+  {{range .Itens}}
+  <li>
+    {{if .Web}}
+    <a class="item" href="/pagina/{{.Web}}">
+    {{else}}
+    <button class="item" type="button" data-abrir="{{.ID}}">
+    {{end}}
+      <img src="/icone/{{.ID}}" alt="" width="48" height="48">
+      <span class="nome">{{.Nome}}</span>
+      <span class="desc">{{.Descricao}}</span>
+    {{if .Web}}</a>{{else}}</button>{{end}}
+  </li>
+  {{end}}
+</ul>
+{{else}}
+<p class="aviso">Nenhuma ferramenta disponível para este usuário.</p>
+{{end}}
+<p class="nota" id="nota" role="status" aria-live="polite"></p>
+{{template "rodape" .}}

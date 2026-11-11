@@ -1,0 +1,21 @@
+--- a/overlay/usr/local/seduc/scripts/coletar_logs.sh
++++ b/overlay/usr/local/seduc/scripts/coletar_logs.sh
+@@ -79,6 +79,18 @@
+ PASTA="$TMP/$NOME"
+ mkdir -p "$PASTA"
+ 
++# --sem-janela: para a Central do Suporte em web. O andamento sai na saída padrão no mesmo
++# formato do yad --progress e o arquivo na linha RESULTADO_ARQUIVO=; sem o arquivo, sai com erro.
++if [ "${1:-}" = "--sem-janela" ]; then
++    coletar
++    if [ -s "$ARQUIVO" ]; then
++        echo "RESULTADO_ARQUIVO=$ARQUIVO"
++        exit 0
++    fi
++    echo "Não foi possível criar o arquivo em $DESTINO"
++    exit 1
++fi
++
+ coletar | "${YAD[@]}" --progress --auto-close --no-buttons --width=420 --percentage=0
+ 
+ if [ -s "$ARQUIVO" ]; then

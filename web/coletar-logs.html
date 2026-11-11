@@ -1,0 +1,32 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel">
+  <h1>Coletar logs para o suporte</h1>
+  {{if not .Tarefa}}
+  <p>Junta os registros do sistema SEDUC e um resumo deste computador (rede, discos,
+  serviços, impressoras e domínio) num arquivo <b>.tar.gz</b> na sua Área de Trabalho,
+  para enviar ao suporte.</p>
+  <p class="secundario">Só entra o que o seu usuário pode ler. Endereços MAC, IP público e
+  números de série ficam ocultos.</p>
+  <form method="post" action="/pagina/coletar-logs/iniciar">
+    <button class="primario" type="submit">Coletar logs</button>
+  </form>
+  {{else}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Iniciando...</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <div class="concluido" hidden>
+      <p class="ok">Logs coletados. Envie ao suporte o arquivo:</p>
+      <pre class="resultado" data-campo="arquivo"></pre>
+      <button class="primario" type="button" data-acao="abrir-pasta">Abrir a pasta</button>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro">Não foi possível criar o arquivo.</p>
+      <pre class="registro"></pre>
+      <a class="botao" href="/pagina/coletar-logs">Tentar de novo</a>
+    </div>
+  </div>
+  {{end}}
+</section>
+{{template "rodape" .}}

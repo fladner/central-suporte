@@ -1,0 +1,37 @@
+{{define "topo"}}<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Titulo}}</title>
+<link rel="icon" href="/logo">
+<link rel="stylesheet" href="/estatico/central.css">
+<script src="/estatico/central.js" defer></script>
+</head>
+<body>
+<header>
+  <div class="faixa"></div>
+  <div class="topo">
+    <img class="logo" src="/logo" alt="" width="44" height="44">
+    <div class="marca">
+      <strong>Secretaria da Educação do Ceará</strong>
+      <span>Central do Suporte SEDUC</span>
+    </div>
+    <div class="maquina">
+      <span>Computador <b>{{.Computador}}</b></span>
+      <span>Sistema SEDUC {{.Sistema}}</span>
+    </div>
+  </div>
+</header>
+<main>
+{{end}}
+
+{{define "rodape"}}
+</main>
+<footer>
+  <span>Você entrou como {{.Perfil}}.</span>
+  <form method="post" action="/sair"><button class="link" type="submit">Fechar a Central</button></form>
+</footer>
+</body>
+</html>
+{{end}}
