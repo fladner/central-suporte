@@ -90,7 +90,7 @@ func fimTokens(codigo int, _ map[string]string) ([][2]string, string) {
 	if codigo == 0 {
 		return rel, "Instalação concluída. Se instalou extensões, feche e abra os navegadores."
 	}
-	return rel, "Algo não foi instalado. Detalhes em " + logTokens
+	return rel, "Algo não foi instalado. Tente de novo mais tarde; os detalhes ficam em " + logTokens + "."
 }
 
 var paginaTokens = &Pagina{

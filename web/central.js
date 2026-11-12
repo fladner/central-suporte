@@ -68,6 +68,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         tab.hidden = !(e.relatorio && e.relatorio.length);
       });
+      // Com relatório ou aviso, a mensagem final do script ("Concluído") e o código de
+      // saída só confundem: o resultado está na tabela e o detalhe, no log.
+      var temResumo = !!(e.aviso || (e.relatorio && e.relatorio.length));
+      if (temResumo) msg.hidden = true;
+      caixa.querySelectorAll("details").forEach(function (d) { d.hidden = temResumo; });
       if (e.ok) {
         msg.hidden = true;
         caixa.querySelectorAll("[data-campo]").forEach(function (c) {
