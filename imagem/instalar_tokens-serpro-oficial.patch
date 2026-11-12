@@ -1,0 +1,76 @@
+--- a/overlay/usr/local/seduc/scripts/instalar_tokens.sh
++++ b/overlay/usr/local/seduc/scripts/instalar_tokens.sh
+@@ -34,6 +34,7 @@
+     [logus_icone]="Logus.png"
+     [bry_deb]="bry-ExtensionModule.deb"
+     [bry_xpi]="bry-assinatura-digital.xpi"
++    [serpro]="Assinador-Serpro-4.6.0-Linux-x86_64.bin"
+ )
+ declare -A LINK=(
+     [safenet]="https://www.dropbox.com/scl/fi/lo8akie944v65y9xonuww/Linux_SAC_10.9_GA.zip?rlkey=yrzxks3yi5on57254g05sykqt&st=sdfnl5ap&dl=1"
+@@ -44,7 +45,7 @@
+     [bry_deb]="https://www.bry.com.br/downloads/extension/v2/linux/ExtensionModule.deb"
+     [bry_xpi]="https://www.bry.com.br/downloads/extension/firefox/assinatura_digital_bry.xpi"
+     [java8]="https://javadl.oracle.com/webapps/download/AutoDL?BundleId=251646_7ed26d28139143f38c58992680c214a5"
+-    [serpro_chave]="https://assinadorserpro.estaleiro.serpro.gov.br/repository/AssinadorSERPROpublic.pgp"
++    [serpro]="https://artefatos-assinador.serpro.gov.br/downloads/4.6.0/Assinador-Serpro-4.6.0-Linux-x86_64.bin"
+ )
+ BRY_CHROME="mbpaklahifpfndjiefdfjhmkefppocfm;https://clients2.google.com/service/update2/crx"
+ 
+@@ -236,43 +237,26 @@
+     relatorio "Assinador Logus" "instalado"
+ }
+ 
++# Assinador SERPRO pelo instalador oficial (.bin): o repositório APT antigo saiu do ar.
++# -no-launch: sem janela, sem perguntas, sem telemetria e sem iniciar com o sistema.
+ instalar_serpro() {
+-    local CHAVE="/usr/share/keyrings/assinador-serpro.gpg"
+-    local FONTE="/etc/apt/sources.list.d/assinador-serpro.sources"
++    local INSTALADOR="$TEMP_DIR/assinador-serpro.bin"
+     local DESKTOP="/usr/share/applications/serpro-signer.desktop"
+ 
+-    progresso 70 "Configurando o repositório do Assinador SERPRO (precisa de internet)..."
+-    if ! obter serpro_chave "$TEMP_DIR/serpro.pgp" || ! gpg --dearmor < "$TEMP_DIR/serpro.pgp" > "$TEMP_DIR/serpro.gpg"; then
+-        relatorio "Assinador SERPRO" "FALHA ao baixar a chave do repositório"
++    progresso 70 "Baixando o Assinador SERPRO (precisa de internet)..."
++    if ! obter serpro "$INSTALADOR"; then
++        relatorio "Assinador SERPRO" "FALHA no download do instalador"
+         return 1
+     fi
+-    install -m 644 "$TEMP_DIR/serpro.gpg" "$CHAVE"
+-    rm -f /etc/apt/sources.list.d/assinador-serpro.list
+-    printf '%s\n' \
+-        'Types: deb' \
+-        'URIs: https://assinadorserpro.estaleiro.serpro.gov.br/repository/' \
+-        'Suites: universal' \
+-        'Components: stable' \
+-        'Architectures: amd64' \
+-        "Signed-By: $CHAVE" \
+-        > "$FONTE"
+-    apt-get update -qq || { relatorio "Assinador SERPRO" "FALHA no apt-get update"; return 1; }
++    chmod +x "$INSTALADOR"
+ 
+-    progresso 75 "Instalando o Assinador SERPRO..."
+-    # O instalador pergunta se o assinador inicia com o sistema: responde 0
+-    expect <<-EOF
+-		set timeout 900
+-		spawn env DEBIAN_FRONTEND=noninteractive apt-get install -y assinador-serpro
+-		expect {
+-		    -re "Iniciar o Assinador junto com o sistema" { send "0\r"; exp_continue }
+-		    timeout { exit 1 }
+-		    eof
+-		}
+-		catch wait result
+-		exit [lindex \$result 3]
+-	EOF
++    # Repositório APT antigo, fora do ar: tirar para o apt-get update não falhar
++    rm -f /etc/apt/sources.list.d/assinador-serpro.sources /etc/apt/sources.list.d/assinador-serpro.list \
++        /usr/share/keyrings/assinador-serpro.gpg
+ 
+-    if ! dpkg-query -W -f='${db:Status-Abbrev}' assinador-serpro 2>/dev/null | grep -q '^ii'; then
++    progresso 75 "Instalando o Assinador SERPRO..."
++    rm -rf /opt/serpro/tool
++    if ! "$INSTALADOR" -no-launch </dev/null; then
+         relatorio "Assinador SERPRO" "FALHA na instalação (veja o log)"
+         return 1
+     fi
