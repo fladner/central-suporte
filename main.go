@@ -52,7 +52,7 @@ func main() {
 func abrirJanela(url string) error {
 	for _, nav := range []string{"google-chrome", "google-chrome-stable", "chromium", "chromium-browser"} {
 		if caminho, err := exec.LookPath(nav); err == nil {
-			cmd := exec.Command(caminho, "--app="+url, "--class=central-suporte-seduc", "--no-first-run", "--no-default-browser-check")
+			cmd := exec.Command(caminho, argumentosJanela(url, pastaPerfil(), saidaXrandr())...)
 			if err := cmd.Start(); err == nil {
 				go cmd.Wait()
 				return nil
