@@ -105,7 +105,9 @@ func (c *Central) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h := w.Header()
 	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self'; form-action 'self' http://127.0.0.1:*; frame-ancestors 'none'; base-uri 'none'")
 	h.Set("X-Content-Type-Options", "nosniff")
-	h.Set("Referrer-Policy", "no-referrer")
+	// same-origin, não no-referrer: com no-referrer o Chrome manda "Origin: null" nos
+	// formulários e a conferência do Origin recusaria todo POST da própria Central.
+	h.Set("Referrer-Policy", "same-origin")
 	h.Set("Cache-Control", "no-store")
 	if r.Host != c.endereco {
 		http.Error(w, "endereço inválido", http.StatusForbidden)

@@ -231,3 +231,16 @@ func TestEnderecoLocal(t *testing.T) {
 		}
 	}
 }
+
+// Com no-referrer o Chrome manda "Origin: null" nos formulários (POST recusado).
+func TestReferrerPolicyMantemOOrigin(t *testing.T) {
+	c := novaCentral(t)
+	w := pedir(c, "GET", "/entrar/"+c.chave, c.endereco, "", nil)
+	if p := w.Header().Get("Referrer-Policy"); p != "same-origin" {
+		t.Errorf("Referrer-Policy: %q", p)
+	}
+	ck := w.Result().Cookies()[0]
+	if w := pedir(c, "POST", "/sair", c.endereco, "null", ck); w.Code != http.StatusForbidden {
+		t.Errorf("Origin null aceito: %d", w.Code)
+	}
+}
