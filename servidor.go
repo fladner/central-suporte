@@ -186,6 +186,7 @@ type dados struct {
 	NomePagina                                  string
 	Tarefa                                      string
 	Erro                                        string
+	Extra                                       any
 }
 
 func (c *Central) base(titulo string) dados {
@@ -268,16 +269,32 @@ func (c *Central) pagina(w http.ResponseWriter, r *http.Request, resto string) {
 	}
 	switch {
 	case acao == "" && r.Method == http.MethodGet:
-		d := c.base(pg.Titulo)
-		d.Pagina, d.NomePagina = pg, nome
-		c.mostrar(w, pg.Modelo, d)
+		c.mostrarPagina(w, pg, nome, "")
 	case acao == "iniciar" && r.Method == http.MethodPost:
-		argv, limite := pg.Iniciar(c, r)
-		t := c.tarefas.Iniciar(nome, argv, limite)
+		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "formulário inválido", http.StatusBadRequest)
+			return
+		}
+		cmd, err := pg.Iniciar(c, r)
+		if err != nil {
+			c.mostrarPagina(w, pg, nome, err.Error())
+			return
+		}
+		t := c.tarefas.Iniciar(nome, cmd.Argv, cmd.Limite, cmd.Fim)
 		http.Redirect(w, r, "/tarefa/"+t.ID, http.StatusSeeOther)
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func (c *Central) mostrarPagina(w http.ResponseWriter, pg *Pagina, nome, erro string) {
+	d := c.base(pg.Titulo)
+	d.Pagina, d.NomePagina, d.Erro = pg, nome, erro
+	if pg.Dados != nil {
+		d.Extra = pg.Dados(c)
+	}
+	c.mostrar(w, pg.Modelo, d)
 }
 
 func (c *Central) tarefa(w http.ResponseWriter, r *http.Request, resto string) {

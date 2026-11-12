@@ -86,3 +86,14 @@ footer form { margin: 0; }
 }
 .itens form { margin: 0; height: 100%; }
 .voltar { margin: 0 0 12px; }
+fieldset { border: 1px solid var(--borda); border-radius: 10px; margin: 0 0 16px; padding: 10px 16px 14px; }
+legend { font-weight: 600; color: var(--verde-escuro); padding: 0 6px; }
+.opcao { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; cursor: pointer; }
+.opcao input { accent-color: var(--verde); }
+.opcao small { color: var(--secundario); }
+.etiqueta { font-style: normal; font-size: 12px; font-weight: 600; color: var(--verde-escuro); background: var(--verde-claro); border-radius: 999px; padding: 1px 8px; }
+.relatorio { width: 100%; border-collapse: collapse; margin: 0 0 16px; }
+.relatorio th, .relatorio td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--borda); }
+.relatorio th { color: var(--secundario); font-weight: 600; font-size: 13px; }
+.relatorio tr.falha td { color: var(--erro); }
+details { margin: 0 0 16px; }

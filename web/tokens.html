@@ -1,0 +1,53 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel">
+  <h1>Instalador de Tokens</h1>
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .Tarefa}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Iniciando... o sistema vai pedir a senha do administrador.</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <div class="concluido" hidden>
+      <p class="ok" data-aviso></p>
+      <table class="relatorio"><thead><tr><th>Item</th><th>Resultado</th></tr></thead><tbody></tbody></table>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro" data-aviso></p>
+      <table class="relatorio"><thead><tr><th>Item</th><th>Resultado</th></tr></thead><tbody></tbody></table>
+      <details><summary>Detalhes técnicos</summary><pre class="registro"></pre></details>
+      <a class="botao" href="/pagina/tokens">Tentar de novo</a>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+  </div>
+  {{else}}{{with .Extra}}
+  {{if .Live}}
+  <p class="erro">O instalador de tokens não funciona no modo de teste (Live). Instale o sistema primeiro.</p>
+  {{else if .Tokens}}
+  <form method="post" action="/pagina/tokens/iniciar">
+    <fieldset>
+      <legend>Token</legend>
+      {{if .Detectado}}<p class="ok">Token detectado. Confirme o modelo ou escolha outro.</p>
+      {{else}}<p class="secundario">Nenhum token conhecido foi detectado. Conecte o token e clique em
+      <a href="/pagina/tokens">Procurar de novo</a>, ou escolha o modelo.</p>{{end}}
+      {{range .Tokens}}
+      <label class="opcao"><input type="radio" name="token" value="{{.Chave}}"{{if .Marcado}} checked{{end}}>
+        <span>{{.Nome}}</span>{{if .Marcado}}<em class="etiqueta">conectado</em>{{end}}</label>
+      {{end}}
+      <label class="opcao"><input type="radio" name="token" value="nenhum"{{if not .Detectado}} checked{{end}}>
+        <span>Nenhum token (só os programas)</span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Programas adicionais</legend>
+      {{range .Extras}}
+      <label class="opcao"><input type="checkbox" name="extra" value="{{.Chave}}"{{if .Marcado}} checked{{end}}>
+        <span>{{.Nome}}</span>{{if .Obs}}<small>{{.Obs}}</small>{{end}}</label>
+      {{end}}
+    </fieldset>
+    <p class="secundario">A instalação pede a senha do administrador e pode levar alguns minutos.</p>
+    <button class="primario" type="submit">Instalar</button>
+  </form>
+  {{end}}
+  {{end}}{{end}}
+</section>
+{{template "rodape" .}}

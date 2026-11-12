@@ -44,7 +44,7 @@ linhas `RESULTADO_<NOME>=valor`.
 | Página | Script | Situação |
 |---|---|---|
 | `coletar-logs` | `coletar_logs.sh --sem-janela` | pronta |
-| Tokens | `painel_tokens.sh` | próxima |
+| `tokens` | `painel_tokens.sh --listar` e `pkexec instalar_tokens.sh` | pronta |
 | Active Directory e Impressoras | `painel_ad.sh`, `painel_impressora_ad.sh` | depois |
 | Atualizar o sistema | `atualizar_sistema.sh` | depois |
 | Boas-vindas e usuários | `welcome.sh` | por último |

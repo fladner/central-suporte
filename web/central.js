@@ -49,6 +49,25 @@ document.addEventListener("DOMContentLoaded", function () {
       barra.firstElementChild.style.width = e.percentual + "%";
       if (!e.fim) { setTimeout(atualizar, 500); return; }
       barra.hidden = true;
+      caixa.querySelectorAll("[data-aviso]").forEach(function (a) {
+        a.textContent = e.aviso || "";
+        a.hidden = !e.aviso;
+      });
+      caixa.querySelectorAll(".relatorio").forEach(function (tab) {
+        var corpo = tab.querySelector("tbody");
+        corpo.textContent = "";
+        (e.relatorio || []).forEach(function (l) {
+          var tr = document.createElement("tr");
+          l.forEach(function (v) {
+            var td = document.createElement("td");
+            td.textContent = v;
+            tr.appendChild(td);
+          });
+          if (/FALHA/.test(l[1])) tr.className = "falha";
+          corpo.appendChild(tr);
+        });
+        tab.hidden = !(e.relatorio && e.relatorio.length);
+      });
       if (e.ok) {
         msg.hidden = true;
         caixa.querySelectorAll("[data-campo]").forEach(function (c) {

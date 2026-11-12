@@ -61,7 +61,7 @@ func TestArgumentosExec(t *testing.T) {
 
 func TestTarefaProtocoloDoYad(t *testing.T) {
 	var ts Tarefas
-	tf := ts.Iniciar("coletar-logs", []string{"sh", "-c", `echo "# Copiando"; echo 20; echo ruido; echo "RESULTADO_ARQUIVO=/tmp/x.tar.gz"; echo 100`}, 10*time.Second)
+	tf := ts.Iniciar("coletar-logs", []string{"sh", "-c", `echo "# Copiando"; echo 20; echo ruido; echo "RESULTADO_ARQUIVO=/tmp/x.tar.gz"; echo 100`}, 10*time.Second, nil)
 	for i := 0; i < 100 && !tf.Estado().Fim; i++ {
 		time.Sleep(20 * time.Millisecond)
 	}
@@ -69,7 +69,7 @@ func TestTarefaProtocoloDoYad(t *testing.T) {
 	if !e.Fim || !e.OK || e.Percent != 100 || e.Mensagem != "Copiando" || e.Resultado["arquivo"] != "/tmp/x.tar.gz" {
 		t.Fatalf("estado: %+v", e)
 	}
-	tf = ts.Iniciar("coletar-logs", []string{"sh", "-c", `echo "deu errado"; exit 3`}, 10*time.Second)
+	tf = ts.Iniciar("coletar-logs", []string{"sh", "-c", `echo "deu errado"; exit 3`}, 10*time.Second, nil)
 	for i := 0; i < 100 && !tf.Estado().Fim; i++ {
 		time.Sleep(20 * time.Millisecond)
 	}

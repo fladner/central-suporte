@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
+	"maps"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -26,6 +28,9 @@ type Tarefa struct {
 	Registro  []string
 	Resultado map[string]string
 	Fim       bool
+	Codigo    int         // código de saída do script
+	Relatorio [][2]string // item, situação (preenchido pela página no fim)
+	Aviso     string
 	OK        bool
 }
 
@@ -36,12 +41,16 @@ type Estado struct {
 	OK        bool              `json:"ok"`
 	Registro  string            `json:"registro,omitempty"`
 	Resultado map[string]string `json:"resultado,omitempty"`
+	Codigo    int               `json:"codigo"`
+	Relatorio [][2]string       `json:"relatorio,omitempty"`
+	Aviso     string            `json:"aviso,omitempty"`
 }
 
 func (t *Tarefa) Estado() Estado {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	e := Estado{Percent: t.Percent, Mensagem: t.Mensagem, Fim: t.Fim, OK: t.OK, Resultado: t.Resultado}
+	e := Estado{Percent: t.Percent, Mensagem: t.Mensagem, Fim: t.Fim, OK: t.OK, Resultado: t.Resultado,
+		Codigo: t.Codigo, Relatorio: t.Relatorio, Aviso: t.Aviso}
 	if t.Fim && !t.OK {
 		e.Registro = strings.Join(t.Registro, "\n")
 	}
@@ -89,8 +98,13 @@ func (ts *Tarefas) Obter(id string) *Tarefa {
 	return ts.todas[id]
 }
 
+// AoTerminar recebe o código de saída e o resultado e devolve o relatório e o aviso que a
+// página mostra no fim (por exemplo, o relatório que o script deixou num arquivo).
+type AoTerminar func(codigo int, resultado map[string]string) (relatorio [][2]string, aviso string)
+
 // Iniciar roda argv em segundo plano (stdout e stderr juntos) com limite de tempo.
-func (ts *Tarefas) Iniciar(pagina string, argv []string, limite time.Duration) *Tarefa {
+// fim pode ser nil.
+func (ts *Tarefas) Iniciar(pagina string, argv []string, limite time.Duration, fim AoTerminar) *Tarefa {
 	t := &Tarefa{ID: novoID(), Pagina: pagina, Mensagem: "Iniciando...", Resultado: map[string]string{}}
 	ts.mu.Lock()
 	if ts.todas == nil {
@@ -115,7 +129,24 @@ func (ts *Tarefas) Iniciar(pagina string, argv []string, limite time.Duration) *
 			}
 			err = cmd.Wait()
 		}
+		codigo := 0
+		if err != nil {
+			codigo = -1
+			var saiu *exec.ExitError
+			if errors.As(err, &saiu) {
+				codigo = saiu.ExitCode()
+			}
+		}
+		var relatorio [][2]string
+		var aviso string
+		if fim != nil {
+			t.mu.Lock()
+			res := maps.Clone(t.Resultado)
+			t.mu.Unlock()
+			relatorio, aviso = fim(codigo, res)
+		}
 		t.mu.Lock()
+		t.Codigo, t.Relatorio, t.Aviso = codigo, relatorio, aviso
 		t.Fim = true
 		t.OK = err == nil
 		if err != nil {
