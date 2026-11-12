@@ -84,3 +84,5 @@ footer form { margin: 0; }
   .maquina { margin-left: 0; text-align: left; }
   footer { flex-direction: column; align-items: flex-start; }
 }
+.itens form { margin: 0; height: 100%; }
+.voltar { margin: 0 0 12px; }

@@ -170,3 +170,64 @@ func TestSegurancaDaEntrada(t *testing.T) {
 		t.Errorf("tarefa: %s", corpo)
 	}
 }
+
+// Item com X-SEDUC-Mesma-Janela=true: a Central chama o programa com --sem-navegador e
+// --voltar <Central> e leva a mesma janela para a página que ele informar.
+func TestItemNaMesmaJanela(t *testing.T) {
+	c := novaCentral(t)
+	d := t.TempDir()
+	args := filepath.Join(d, "args")
+	prog := filepath.Join(d, "tela.sh")
+	if err := os.WriteFile(prog, []byte("#!/bin/sh\necho \"$@\" > "+args+"\necho tela=http://127.0.0.1:5555/t/abc/\nsleep 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	mudo := filepath.Join(d, "mudo.sh")
+	if err := os.WriteFile(mudo, []byte("#!/bin/sh\necho tela=http://exemplo.com:80/\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	escrever(t, c.Itens, "60-vde.desktop", "[Desktop Entry]\nName=VDE-CE\nExec="+prog+"\nX-SEDUC-Mesma-Janela=true\n")
+	escrever(t, c.Itens, "70-mudo.desktop", "[Desktop Entry]\nName=Mudo\nExec="+mudo+"\nX-SEDUC-Mesma-Janela=true\n")
+	escrever(t, c.Itens, "80-yad.desktop", "[Desktop Entry]\nName=Yad\nExec="+prog+"\n")
+	h := c.endereco
+	ck := pedir(c, "GET", "/entrar/"+c.chave, h, "", nil).Result().Cookies()[0]
+
+	w := pedir(c, "GET", "/", h, "", ck)
+	if !strings.Contains(w.Body.String(), `action="/externo/60-vde"`) || !strings.Contains(w.Header().Get("Content-Security-Policy"), "form-action 'self' http://127.0.0.1:*;") {
+		t.Fatalf("início sem o formulário do item ou CSP sem a volta: %s", w.Body.String())
+	}
+	w = pedir(c, "POST", "/externo/60-vde", h, "http://"+h, ck)
+	if w.Code != http.StatusSeeOther || w.Header().Get("Location") != "http://127.0.0.1:5555/t/abc/" {
+		t.Fatalf("externo: %d %q", w.Code, w.Header().Get("Location"))
+	}
+	b, _ := os.ReadFile(args)
+	if got := strings.TrimSpace(string(b)); got != "--sem-navegador --voltar http://"+h+"/" {
+		t.Errorf("argumentos: %q", got)
+	}
+	c.mu.Lock()
+	if c.externos != 1 {
+		t.Errorf("externos: %d", c.externos)
+	}
+	c.mu.Unlock()
+
+	esperaExterno = 2 * time.Second
+	w = pedir(c, "POST", "/externo/70-mudo", h, "http://"+h, ck)
+	if w.Code != http.StatusOK || !strings.Contains(w.Body.String(), "Não foi possível abrir Mudo") {
+		t.Errorf("endereço de fora aceito: %d", w.Code)
+	}
+	if w := pedir(c, "POST", "/externo/80-yad", h, "http://"+h, ck); w.Code != http.StatusNotFound {
+		t.Errorf("item sem a chave abriu na mesma janela: %d", w.Code)
+	}
+}
+
+func TestEnderecoLocal(t *testing.T) {
+	for _, e := range []string{"http://127.0.0.1:41234/t/x/", " http://127.0.0.1:1/ "} {
+		if _, ok := enderecoLocal(e); !ok {
+			t.Errorf("%q recusado", e)
+		}
+	}
+	for _, e := range []string{"http://127.0.0.1/", "https://127.0.0.1:1/", "http://localhost:1/", "http://u@127.0.0.1:1/", "javascript:x", "ENCERRADA"} {
+		if _, ok := enderecoLocal(e); ok {
+			t.Errorf("%q aceito", e)
+		}
+	}
+}

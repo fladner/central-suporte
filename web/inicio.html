@@ -1,18 +1,21 @@
 {{template "topo" .}}
 <h1>Ferramentas de suporte</h1>
+{{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
 {{if .Itens}}
 <ul class="itens">
   {{range .Itens}}
   <li>
     {{if .Web}}
     <a class="item" href="/pagina/{{.Web}}">
+    {{else if .Mesma}}
+    <form method="post" action="/externo/{{.ID}}"><button class="item" type="submit">
     {{else}}
     <button class="item" type="button" data-abrir="{{.ID}}">
     {{end}}
       <img src="/icone/{{.ID}}" alt="" width="48" height="48">
       <span class="nome">{{.Nome}}</span>
       <span class="desc">{{.Descricao}}</span>
-    {{if .Web}}</a>{{else}}</button>{{end}}
+    {{if .Web}}</a>{{else if .Mesma}}</button></form>{{else}}</button>{{end}}
   </li>
   {{end}}
 </ul>

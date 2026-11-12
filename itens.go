@@ -17,6 +17,9 @@ import (
 //
 // Novo: X-SEDUC-Web=<página> abre a página web da própria Central em vez do Exec.
 // O central_suporte.sh ignora a chave, então o mesmo .desktop serve para as duas.
+// Novo: X-SEDUC-Mesma-Janela=true para programas com página web própria (a tela do VDE-CE):
+// a Central os chama com --sem-navegador --voltar <Central> e abre a página deles na mesma
+// janela (ver externos.go).
 type Item struct {
 	ID        string // nome do arquivo sem .desktop (10-boas-vindas)
 	Nome      string
@@ -26,6 +29,7 @@ type Item struct {
 	Acesso    string
 	TryExec   string
 	Web       string
+	Mesma     bool // X-SEDUC-Mesma-Janela=true
 }
 
 func lerDesktop(caminho string) (Item, bool) {
@@ -66,6 +70,8 @@ func lerDesktop(caminho string) (Item, bool) {
 			it.Acesso = valor
 		case "TryExec":
 			it.TryExec = valor
+		case "X-SEDUC-Mesma-Janela":
+			it.Mesma = strings.EqualFold(valor, "true")
 		case "X-SEDUC-Web":
 			it.Web = valor
 		}

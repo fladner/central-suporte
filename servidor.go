@@ -47,6 +47,7 @@ type Central struct {
 	ultimo   time.Time
 	fim      chan struct{}
 	fechar   sync.Once
+	externos int // programas abertos na mesma janela (externos.go)
 }
 
 func aleatorio(n int) string {
@@ -90,8 +91,9 @@ func (c *Central) Vigiar() {
 			c.mu.Lock()
 			parado := time.Since(c.ultimo)
 			usada := c.usada
+			externos := c.externos
 			c.mu.Unlock()
-			if (usada && parado > 70*time.Second) || parado > 15*time.Minute {
+			if externos == 0 && ((usada && parado > 70*time.Second) || parado > 15*time.Minute) {
 				c.encerrar()
 				return
 			}
@@ -101,7 +103,7 @@ func (c *Central) Vigiar() {
 
 func (c *Central) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h := w.Header()
-	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+	h.Set("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; connect-src 'self'; form-action 'self' http://127.0.0.1:*; frame-ancestors 'none'; base-uri 'none'")
 	h.Set("X-Content-Type-Options", "nosniff")
 	h.Set("Referrer-Policy", "no-referrer")
 	h.Set("Cache-Control", "no-store")
@@ -161,6 +163,8 @@ func (c *Central) rotas(w http.ResponseWriter, r *http.Request) {
 		c.arquivo(w, r, "/usr/share/pixmaps/seduc-logo.png")
 	case strings.HasPrefix(p, "/icone/") && r.Method == http.MethodGet:
 		c.icone(w, r, strings.TrimPrefix(p, "/icone/"))
+	case strings.HasPrefix(p, "/externo/") && r.Method == http.MethodPost:
+		c.externo(w, r, strings.TrimPrefix(p, "/externo/"))
 	case strings.HasPrefix(p, "/abrir/") && r.Method == http.MethodPost:
 		c.abrir(w, strings.TrimPrefix(p, "/abrir/"))
 	case strings.HasPrefix(p, "/pagina/"):

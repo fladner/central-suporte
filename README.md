@@ -18,6 +18,11 @@ Substitui a primeira versão deste repositório (Flask), que ficou no histórico
 - Novo: `X-SEDUC-Web=<página>` abre a página web da Central. O `central_suporte.sh` (yad)
   ignora a chave, então o mesmo `.desktop` serve para as duas centrais. Itens sem a chave
   continuam abrindo o programa do `Exec` (yad), o que permite migrar um item por vez.
+- Novo: `X-SEDUC-Mesma-Janela=true` para programas com página web própria, como a tela do
+  VDE-CE. A Central os chama com `--sem-navegador --voltar <endereço da Central>`, lê na saída
+  a linha `<nome>=http://127.0.0.1:<porta>/...` e leva a mesma janela para lá; o botão de volta
+  do programa traz a janela de volta. Use a chave só quando o programa do `Exec` aceitar essas
+  opções (no VDE-CE, o agente Go; o 0.7.3 em Python abre o yad).
 - Ícones do tema da imagem (Papirus, depois elementary-xfce, Adwaita e hicolor).
 - Fechar a janela encerra a Central em cerca de um minuto; parada, em 15 minutos.
 
@@ -39,8 +44,8 @@ linhas `RESULTADO_<NOME>=valor`.
 | Página | Script | Situação |
 |---|---|---|
 | `coletar-logs` | `coletar_logs.sh --sem-janela` | pronta |
-| Impressoras e Tokens | `painel_impressora_ad.sh`, `painel_tokens.sh` | próximas |
-| Active Directory | `painel_ad.sh` | depois |
+| Tokens | `painel_tokens.sh` | próxima |
+| Active Directory e Impressoras | `painel_ad.sh`, `painel_impressora_ad.sh` | depois |
 | Atualizar o sistema | `atualizar_sistema.sh` | depois |
 | Boas-vindas e usuários | `welcome.sh` | por último |
 
