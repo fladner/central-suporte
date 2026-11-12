@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strconv"
@@ -187,6 +188,7 @@ type dados struct {
 	Tarefa                                      string
 	Erro                                        string
 	Extra                                       any
+	Form                                        map[string]string // campos já digitados (sem senha)
 }
 
 func (c *Central) base(titulo string) dados {
@@ -267,30 +269,55 @@ func (c *Central) pagina(w http.ResponseWriter, r *http.Request, resto string) {
 		http.NotFound(w, r)
 		return
 	}
-	switch {
-	case acao == "" && r.Method == http.MethodGet:
-		c.mostrarPagina(w, pg, nome, "")
-	case acao == "iniciar" && r.Method == http.MethodPost:
+	lerForm := func() bool {
 		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "formulário inválido", http.StatusBadRequest)
+			return false
+		}
+		return true
+	}
+	switch {
+	case acao == "" && r.Method == http.MethodGet:
+		c.mostrarPagina(w, pg, nome, "", nil)
+	case acao == "iniciar" && r.Method == http.MethodPost && pg.Iniciar != nil:
+		if !lerForm() {
 			return
 		}
 		cmd, err := pg.Iniciar(c, r)
 		if err != nil {
-			c.mostrarPagina(w, pg, nome, err.Error())
+			c.mostrarPagina(w, pg, nome, err.Error(), r.PostForm)
 			return
 		}
-		t := c.tarefas.Iniciar(nome, cmd.Argv, cmd.Limite, cmd.Fim)
+		t := c.tarefas.Iniciar(nome, cmd)
 		http.Redirect(w, r, "/tarefa/"+t.ID, http.StatusSeeOther)
+	case r.Method == http.MethodPost && pg.Formularios[acao] != nil:
+		// Ação rápida, sem tarefa (ex.: entrar no Kerberos): volta para a página.
+		if !lerForm() {
+			return
+		}
+		if err := pg.Formularios[acao](c, r); err != nil {
+			c.mostrarPagina(w, pg, nome, err.Error(), r.PostForm)
+			return
+		}
+		http.Redirect(w, r, "/pagina/"+nome, http.StatusSeeOther)
 	default:
 		http.NotFound(w, r)
 	}
 }
 
-func (c *Central) mostrarPagina(w http.ResponseWriter, pg *Pagina, nome, erro string) {
+// camposSecretos nunca voltam para o formulário depois de um erro.
+var camposSecretos = map[string]bool{"senha": true}
+
+func (c *Central) mostrarPagina(w http.ResponseWriter, pg *Pagina, nome, erro string, form url.Values) {
 	d := c.base(pg.Titulo)
 	d.Pagina, d.NomePagina, d.Erro = pg, nome, erro
+	d.Form = map[string]string{}
+	for k, v := range form {
+		if !camposSecretos[k] && len(v) > 0 {
+			d.Form[k] = v[0]
+		}
+	}
 	if pg.Dados != nil {
 		d.Extra = pg.Dados(c)
 	}

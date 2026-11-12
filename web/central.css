@@ -97,3 +97,9 @@ legend { font-weight: 600; color: var(--verde-escuro); padding: 0 6px; }
 .relatorio th { color: var(--secundario); font-weight: 600; font-size: 13px; }
 .relatorio tr.falha td { color: var(--erro); }
 details { margin: 0 0 16px; }
+.campos label { display: block; font-weight: 600; margin: 14px 0 6px; }
+.campos input[type=text], .campos input[type=password] { width: 100%; max-width: 440px; padding: 9px 11px; border: 1px solid var(--borda); border-radius: 8px; font: inherit; }
+.campos input:focus { outline: 3px solid rgba(35, 122, 59, .3); outline-offset: 1px; border-color: var(--verde); }
+.botoes { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+fieldset.perigo { border-color: var(--erro); margin-top: 22px; }
+fieldset.perigo legend { color: var(--erro); }

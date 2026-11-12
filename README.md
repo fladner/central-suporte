@@ -45,7 +45,7 @@ linhas `RESULTADO_<NOME>=valor`.
 |---|---|---|
 | `coletar-logs` | `coletar_logs.sh --sem-janela` | pronta |
 | `tokens` | `painel_tokens.sh --listar` e `pkexec instalar_tokens.sh` | pronta |
-| Active Directory e Impressoras | `painel_ad.sh`, `painel_impressora_ad.sh` | depois |
+| `ad` e `impressoras` | `painel_ad.sh --listar` e `pkexec ingressar_ad.sh` (senha do AD pela entrada padrão); `painel_impressora_ad.sh --listar/--kinit/--padrao` e `pkexec instalar_impressora_ad.sh` | prontas |
 | Atualizar o sistema | `atualizar_sistema.sh` | depois |
 | Boas-vindas e usuários | `welcome.sh` | por último |
 

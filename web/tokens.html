@@ -21,6 +21,7 @@
     </div>
   </div>
   {{else}}{{with .Extra}}
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
   {{if .Live}}
   <p class="erro">O instalador de tokens não funciona no modo de teste (Live). Instale o sistema primeiro.</p>
   {{else if .Tokens}}

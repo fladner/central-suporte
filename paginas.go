@@ -21,12 +21,17 @@ type Pagina struct {
 	Iniciar func(c *Central, r *http.Request) (Comando, error)
 	// Acoes depois do fim: nome -> função (recebe o resultado da tarefa).
 	Acoes map[string]func(c *Central, resultado map[string]string) error
+	// Formularios: ações rápidas sem tarefa (POST /pagina/<nome>/<ação>); um erro volta
+	// para o formulário com a mensagem, o sucesso volta para a página.
+	Formularios map[string]func(c *Central, r *http.Request) error
 }
 
 type Comando struct {
 	Argv   []string
 	Limite time.Duration
 	Fim    AoTerminar
+	// Entrada vai para a entrada padrão do comando (senha), nunca para o argv.
+	Entrada string
 }
 
 // errFormulario é um erro de formulário que a página mostra como está.
@@ -52,5 +57,7 @@ var paginas = map[string]*Pagina{
 			},
 		},
 	},
-	"tokens": paginaTokens,
+	"tokens":      paginaTokens,
+	"ad":          paginaAD,
+	"impressoras": paginaImpressoras,
 }

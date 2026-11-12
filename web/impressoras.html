@@ -1,0 +1,49 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel">
+  <h1>Impressoras SEDUC</h1>
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .Tarefa}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Aguarde...</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <div class="concluido" hidden>
+      <p class="ok" data-aviso></p>
+      <table class="relatorio"><thead><tr><th>Impressora</th><th>Resultado</th></tr></thead><tbody></tbody></table>
+      <a class="botao" href="/pagina/impressoras">Ver as impressoras</a>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro" data-aviso></p>
+      <details><summary>Detalhes técnicos</summary><pre class="registro"></pre></details>
+      <a class="botao" href="/pagina/impressoras">Tentar de novo</a>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+  </div>
+  {{else}}{{with .Extra}}
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .SemTicket}}
+  <form class="campos" method="post" action="/pagina/impressoras/kerberos" autocomplete="off">
+    <label for="senha">Digite a sua senha do AD para acessar o servidor de impressão {{.Servidor}}</label>
+    <input id="senha" name="senha" type="password" maxlength="256" required autofocus>
+    <div class="botoes"><button class="primario" type="submit">Continuar</button></div>
+  </form>
+  {{else if .Filas}}
+  <form method="post" action="/pagina/impressoras/iniciar">
+    <fieldset>
+      <legend>Impressoras de {{.Servidor}}</legend>
+      {{range .Filas}}
+      <label class="opcao"><input type="checkbox" name="fila" value="{{.Nome}}">
+        <span>{{.Nome}}</span>{{if .Descricao}}<small>{{.Descricao}}</small>{{end}}{{if .Instalada}}<em class="etiqueta">instalada</em>{{end}}</label>
+      {{end}}
+    </fieldset>
+    <p class="secundario">Marque as impressoras e escolha instalar ou remover. Na instalação, a primeira marcada fica como padrão para você.</p>
+    <div class="botoes">
+      <button class="primario" type="submit" name="acao" value="adicionar">Instalar marcadas</button>
+      <button type="submit" name="acao" value="remover">Remover marcadas</button>
+    </div>
+  </form>
+  {{end}}
+  {{end}}{{end}}
+</section>
+{{template "rodape" .}}

@@ -1,0 +1,53 @@
+--- a/overlay/usr/local/seduc/scripts/painel_impressora_ad.sh
++++ b/overlay/usr/local/seduc/scripts/painel_impressora_ad.sh
+@@ -85,9 +85,50 @@
+         "${LINHAS[@]}"
+ }
+ 
++# Modos para a Central do Suporte em web (rodam como o usuário, sem janela):
++#   --listar        uma linha por informação, separada por "|":
++#                     ERRO|<texto>  SERVIDOR|<servidor>  SEM_TICKET  FILA|<fila>|<descrição>|<1 se instalada>
++#   --kinit         lê a senha do AD na entrada padrão e pede o ticket Kerberos
++#   --padrao <fila> deixa a impressora como padrão só deste usuário
++listar() {
++    local FILAS FILA DESC
++    if [[ -z "$IMPRESSORA_SERVIDOR" ]]; then
++        echo "ERRO|Nenhum servidor de impressão configurado em $AD_CONF."
++        return 0
++    fi
++    if ! wbinfo -i "$USER" >/dev/null 2>&1; then
++        echo "ERRO|As impressoras SEDUC são para usuários do domínio. Entre no computador com o seu usuário do AD."
++        return 0
++    fi
++    echo "SERVIDOR|$IMPRESSORA_SERVIDOR"
++    klist -s || { echo "SEM_TICKET"; return 0; }
++    FILAS=$(listar_filas)
++    if [[ -z "$FILAS" ]]; then
++        echo "ERRO|Não foi possível listar as impressoras de $IMPRESSORA_SERVIDOR. Confira se está na rede SEDUC."
++        return 0
++    fi
++    while IFS='|' read -r FILA DESC; do
++        [[ -n "$FILA" ]] || continue
++        instalada "$FILA" && echo "FILA|$FILA|$DESC|1" || echo "FILA|$FILA|$DESC|0"
++    done <<< "$FILAS"
++}
++
+ ##########
+ ## MAIN ##
+ ##########
++case "${1:-}" in
++    --listar) listar; exit 0 ;;
++    --kinit)
++        IFS= read -r SENHA || true
++        printf '%s\n' "$SENHA" | kinit "$USER@$REALM" >/dev/null 2>&1
++        exit $?
++        ;;
++    --padrao)
++        lpoptions -d "$(nome_cups "${2:-}")" >/dev/null 2>&1
++        exit $?
++        ;;
++esac
++
+ verificar_usuario
+ 
+ FILAS=$(listar_filas)

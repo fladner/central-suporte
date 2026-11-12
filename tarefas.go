@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 // Tarefa roda um script de trabalho e acompanha o andamento pelo mesmo protocolo do
@@ -104,7 +103,8 @@ type AoTerminar func(codigo int, resultado map[string]string) (relatorio [][2]st
 
 // Iniciar roda argv em segundo plano (stdout e stderr juntos) com limite de tempo.
 // fim pode ser nil.
-func (ts *Tarefas) Iniciar(pagina string, argv []string, limite time.Duration, fim AoTerminar) *Tarefa {
+func (ts *Tarefas) Iniciar(pagina string, cmdo Comando) *Tarefa {
+	argv, limite, fim := cmdo.Argv, cmdo.Limite, cmdo.Fim
 	t := &Tarefa{ID: novoID(), Pagina: pagina, Mensagem: "Iniciando...", Resultado: map[string]string{}}
 	ts.mu.Lock()
 	if ts.todas == nil {
@@ -116,6 +116,10 @@ func (ts *Tarefas) Iniciar(pagina string, argv []string, limite time.Duration, f
 		ctx, cancelar := context.WithTimeout(context.Background(), limite)
 		defer cancelar()
 		cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
+		// Entrada: segredo para a 1ª linha da entrada padrão (senha do AD), nunca no argv.
+		if cmdo.Entrada != "" {
+			cmd.Stdin = strings.NewReader(cmdo.Entrada)
+		}
 		saida, err := cmd.StdoutPipe()
 		if err == nil {
 			cmd.Stderr = cmd.Stdout

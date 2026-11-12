@@ -1,0 +1,59 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel">
+  <h1>Active Directory SEDUC</h1>
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .Tarefa}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Iniciando... o sistema vai pedir a senha do administrador deste computador.</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <div class="concluido" hidden>
+      <p class="ok" data-aviso></p>
+      <table class="relatorio"><thead><tr><th>Item</th><th>Resultado</th></tr></thead><tbody></tbody></table>
+      <button class="primario" type="button" data-acao="reiniciar">Reiniciar agora</button>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro" data-aviso></p>
+      <table class="relatorio"><thead><tr><th>Item</th><th>Resultado</th></tr></thead><tbody></tbody></table>
+      <details><summary>Detalhes técnicos</summary><pre class="registro"></pre></details>
+      <a class="botao" href="/pagina/ad">Tentar de novo</a>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+  </div>
+  {{else}}{{$f := .Form}}{{with .Extra}}
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .Live}}
+  <p class="erro">O ingresso no domínio não funciona no modo de teste (Live). Instale o sistema primeiro.</p>
+  {{else if .Dominio}}
+  {{if .NoDominio}}
+  <p class="ok">Este computador já está no domínio <b>{{.NoDominio}}</b>. Para refazer, ingresse de novo; para remover, use Sair do domínio.</p>
+  {{else}}
+  <p>Ingressar este computador no domínio <b>{{.Dominio}}</b>. Use um usuário do AD com permissão para ingressar máquinas.</p>
+  {{end}}
+  <form class="campos" method="post" action="/pagina/ad/iniciar" autocomplete="off">
+    <label for="usuario">Usuário administrador do AD</label>
+    <input id="usuario" name="usuario" type="text" maxlength="64" value="{{index $f "usuario"}}" required autofocus>
+    <label for="senha">Senha</label>
+    <input id="senha" name="senha" type="password" maxlength="256" required>
+    <label for="computador">Nome do computador (até 15)</label>
+    <input id="computador" name="computador" type="text" maxlength="15" value="{{with index $f "computador"}}{{.}}{{else}}{{$.Extra.Computador}}{{end}}">
+    <label for="ou">OU do computador (opcional, ex.: Escolas/Computadores)</label>
+    <input id="ou" name="ou" type="text" maxlength="200" value="{{index $f "ou"}}">
+    <p class="secundario">O sistema pede a senha do administrador deste computador. A senha do AD vai direto para o script e não fica gravada.</p>
+    <div class="botoes">
+      <button class="primario" type="submit" name="acao" value="entrar">{{if .NoDominio}}Ingressar de novo{{else}}Ingressar{{end}}</button>
+    </div>
+    {{if .NoDominio}}
+    <fieldset class="perigo">
+      <legend>Sair do domínio</legend>
+      <label class="opcao"><input type="checkbox" name="confirmo" value="sim">
+        <span>Remover este computador do domínio. Os usuários do AD não vão mais entrar nele.</span></label>
+      <button type="submit" name="acao" value="sair">Sair do domínio</button>
+    </fieldset>
+    {{end}}
+  </form>
+  {{end}}
+  {{end}}{{end}}
+</section>
+{{template "rodape" .}}
