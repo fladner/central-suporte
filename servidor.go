@@ -93,7 +93,7 @@ func (c *Central) Vigiar() {
 			c.mu.Lock()
 			parado := time.Since(c.ultimo)
 			usada := c.usada
-			externos := c.externos
+			externos := c.externos + c.tarefas.Ativas()
 			c.mu.Unlock()
 			if externos == 0 && ((usada && parado > 70*time.Second) || parado > 15*time.Minute) {
 				c.encerrar()

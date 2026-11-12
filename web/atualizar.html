@@ -1,0 +1,35 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel">
+  <h1>Atualizar o sistema</h1>
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .Tarefa}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Iniciando... o sistema vai pedir a senha do administrador.</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <pre class="saida" data-saida aria-label="Saída da atualização"></pre>
+    <p class="secundario" data-enquanto>Pode fechar esta janela: a atualização continua até o fim.</p>
+    <div class="concluido" hidden>
+      <p class="ok" data-aviso></p>
+      <button class="primario" type="button" data-acao="reiniciar" data-se="reiniciar" hidden>Reiniciar agora</button>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro" data-aviso></p>
+      <a class="botao" href="/pagina/atualizar">Tentar de novo</a>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+  </div>
+  {{else}}{{with .Extra}}
+  {{if .Live}}
+  <p class="erro">No modo live (pendrive) o sistema não é atualizado.</p>
+  {{else}}
+  <p>Instala as atualizações de todos os programas e do sistema SEDUC. Pode levar alguns minutos e precisa de internet.</p>
+  <p class="secundario">A senha do administrador será pedida a seguir.</p>
+  <form method="post" action="/pagina/atualizar/iniciar">
+    <button class="primario" type="submit">Atualizar</button>
+  </form>
+  {{end}}
+  {{end}}{{end}}
+</section>
+{{template "rodape" .}}

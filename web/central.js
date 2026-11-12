@@ -49,8 +49,20 @@ document.addEventListener("DOMContentLoaded", function () {
       barra.firstElementChild.style.width = e.percentual + "%";
       // Sem percentual ainda: a faixa corre, para não parecer travado.
       barra.classList.toggle("indeterminada", !e.fim && !e.percentual);
-      if (!e.fim) { setTimeout(atualizar, 500); return; }
+      // Saída ao vivo (Atualizar o sistema): acompanha o fim, a não ser que a pessoa
+      // tenha rolado para cima para ler.
+      var saida = caixa.querySelector("[data-saida]");
+      if (saida && e.saida !== undefined && saida.textContent !== e.saida) {
+        var noFim = saida.scrollHeight - saida.scrollTop - saida.clientHeight < 40;
+        saida.textContent = e.saida;
+        if (noFim) saida.scrollTop = saida.scrollHeight;
+      }
+      if (!e.fim) { setTimeout(atualizar, 1000); return; }
       barra.hidden = true;
+      caixa.querySelectorAll("[data-enquanto]").forEach(function (p) { p.hidden = true; });
+      caixa.querySelectorAll("[data-se]").forEach(function (b) {
+        b.hidden = (e.resultado || {})[b.dataset.se] !== "1";
+      });
       caixa.querySelectorAll("[data-aviso]").forEach(function (a) {
         a.textContent = e.aviso || "";
         a.hidden = !e.aviso;
@@ -82,7 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         caixa.querySelector(".concluido").hidden = false;
       } else {
-        caixa.querySelector(".registro").textContent = e.registro || "";
+        var registro = caixa.querySelector(".registro");
+        if (registro) registro.textContent = e.registro || "";
         caixa.querySelector(".falhou").hidden = false;
       }
     }).catch(function () { setTimeout(atualizar, 1500); });

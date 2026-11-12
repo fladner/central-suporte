@@ -32,6 +32,10 @@ type Comando struct {
 	Fim    AoTerminar
 	// Mensagem inicial da página enquanto o script não manda "# texto".
 	Mensagem string
+	// AoVivo: a página mostra a saída enquanto o script roda (como o yad --text-info --tail).
+	AoVivo bool
+	// Etapa: linhas que começam com este prefixo viram a mensagem (ex.: "==> ").
+	Etapa string
 	// Entrada vai para a entrada padrão do comando (senha), nunca para o argv.
 	Entrada string
 }
@@ -63,4 +67,5 @@ var paginas = map[string]*Pagina{
 	"ad":          paginaAD,
 	"impressoras": paginaImpressoras,
 	"boas-vindas": paginaBoasVindas,
+	"atualizar":   paginaAtualizar,
 }

@@ -30,6 +30,8 @@ type Tarefa struct {
 	Codigo    int         // código de saída do script
 	Relatorio [][2]string // item, situação (preenchido pela página no fim)
 	Aviso     string
+	aoVivo    bool   // Estado leva a saída enquanto roda (Comando.AoVivo)
+	etapa     string // prefixo de linha que vira a mensagem (Comando.Etapa)
 	OK        bool
 }
 
@@ -43,6 +45,7 @@ type Estado struct {
 	Codigo    int               `json:"codigo"`
 	Relatorio [][2]string       `json:"relatorio,omitempty"`
 	Aviso     string            `json:"aviso,omitempty"`
+	Saida     string            `json:"saida,omitempty"`
 }
 
 func (t *Tarefa) Estado() Estado {
@@ -50,6 +53,9 @@ func (t *Tarefa) Estado() Estado {
 	defer t.mu.Unlock()
 	e := Estado{Percent: t.Percent, Mensagem: t.Mensagem, Fim: t.Fim, OK: t.OK, Resultado: t.Resultado,
 		Codigo: t.Codigo, Relatorio: t.Relatorio, Aviso: t.Aviso}
+	if t.aoVivo {
+		e.Saida = strings.Join(t.Registro, "\n")
+	}
 	if t.Fim && !t.OK {
 		e.Registro = strings.Join(t.Registro, "\n")
 	}
@@ -61,6 +67,9 @@ func (t *Tarefa) linha(l string) {
 	defer t.mu.Unlock()
 	l = strings.TrimRight(l, "\r")
 	switch {
+	case t.etapa != "" && strings.HasPrefix(l, t.etapa):
+		t.Mensagem = strings.TrimSpace(strings.TrimPrefix(l, t.etapa))
+		t.Registro = append(t.Registro, l)
 	case strings.HasPrefix(l, "#"):
 		t.Mensagem = strings.TrimSpace(strings.TrimPrefix(l, "#"))
 	case strings.HasPrefix(l, "RESULTADO_") && strings.Contains(l, "="):
@@ -109,7 +118,8 @@ func (ts *Tarefas) Iniciar(pagina string, cmdo Comando) *Tarefa {
 	if cmdo.Mensagem != "" {
 		msg = cmdo.Mensagem
 	}
-	t := &Tarefa{ID: novoID(), Pagina: pagina, Mensagem: msg, Resultado: map[string]string{}}
+	t := &Tarefa{ID: novoID(), Pagina: pagina, Mensagem: msg, Resultado: map[string]string{},
+		aoVivo: cmdo.AoVivo, etapa: cmdo.Etapa}
 	ts.mu.Lock()
 	if ts.todas == nil {
 		ts.todas = map[string]*Tarefa{}
@@ -152,6 +162,10 @@ func (ts *Tarefas) Iniciar(pagina string, cmdo Comando) *Tarefa {
 			res := maps.Clone(t.Resultado)
 			t.mu.Unlock()
 			relatorio, aviso = fim(codigo, res)
+			// O fim pode acrescentar resultados (ex.: reiniciar=1).
+			t.mu.Lock()
+			t.Resultado = res
+			t.mu.Unlock()
 		}
 		t.mu.Lock()
 		t.Codigo, t.Relatorio, t.Aviso = codigo, relatorio, aviso
@@ -169,4 +183,19 @@ func (ts *Tarefas) Iniciar(pagina string, cmdo Comando) *Tarefa {
 		t.mu.Unlock()
 	}()
 	return t
+}
+
+// Ativas conta as tarefas ainda rodando: a Central não se encerra no meio de uma.
+func (ts *Tarefas) Ativas() int {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	n := 0
+	for _, t := range ts.todas {
+		t.mu.Lock()
+		if !t.Fim {
+			n++
+		}
+		t.mu.Unlock()
+	}
+	return n
 }

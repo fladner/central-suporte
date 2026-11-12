@@ -46,7 +46,7 @@ linhas `RESULTADO_<NOME>=valor`.
 | `coletar-logs` | `coletar_logs.sh --sem-janela` | pronta |
 | `tokens` | `painel_tokens.sh --listar` e `pkexec instalar_tokens.sh` | pronta |
 | `ad` e `impressoras` | `painel_ad.sh --listar` e `pkexec ingressar_ad.sh` (senha do AD pela entrada padrão); `painel_impressora_ad.sh --listar/--kinit/--padrao` e `pkexec instalar_impressora_ad.sh` | prontas |
-| Atualizar o sistema | `atualizar_sistema.sh` | depois |
+| `atualizar` | `pkexec atualizar_sistema_root.sh` (sem mudança no script): etapa pelas linhas `==> `, saída ao vivo, reiniciar só com `/var/run/reboot-required` | pronta |
 | `boas-vindas` | `welcome.sh --listar` e `pkexec criar_usuarios.sh`; no primeiro login o `welcome.sh` abre `central-suporte --abrir boas-vindas` (se instalada) | pronta |
 
 ## Compilar e testar

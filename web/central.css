@@ -109,3 +109,5 @@ fieldset.perigo legend { color: var(--erro); }
 @media (prefers-reduced-motion: reduce) { .barra.indeterminada div { animation: none; width: 100% !important; opacity: .5; } }
 .boas-vindas { margin: 0 0 16px; }
 code { font: 13px ui-monospace, Menlo, Consolas, monospace; background: var(--verde-claro); padding: 1px 5px; border-radius: 4px; }
+pre.saida { max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 12px; }
+pre.saida:empty { display: none; }
