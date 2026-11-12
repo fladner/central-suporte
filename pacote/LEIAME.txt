@@ -1,0 +1,62 @@
+Central do Suporte SEDUC em web - pacote para a imagem Xubuntu SEDUC 26.04
+Central @VERSAO_CENTRAL@ (repositório fladner/central-suporte)
+
+O QUE VEM AQUI
+  debs/seduc-central-suporte_@VERSAO_CENTRAL@_amd64.deb
+      O programa /usr/bin/central-suporte (Go, sem dependências). O build.sh instala
+      todos os .deb de debs/ no chroot, então basta ele estar lá.
+  patches/
+      Mudanças nos scripts da imagem (overlay/usr/local/seduc/scripts):
+        central_suporte.sh     abre a Central web quando o pacote está instalado
+                               (sem ele, ou com --yad, continua no yad)
+        welcome.sh             --listar; o primeiro boot abre as Boas-vindas na web
+        coletar_logs.sh        --sem-janela
+        painel_tokens.sh       --listar
+        instalar_tokens.sh     Assinador SERPRO pelo instalador oficial 4.6.0
+        painel_ad.sh           --listar
+        painel_impressora_ad.sh  --listar, --kinit e --padrao
+      Os scripts root (criar_usuarios.sh, atualizar_sistema_root.sh, ingressar_ad.sh,
+      instalar_impressora_ad.sh) não mudam.
+  incorporar.sh
+      Aplica tudo no repositório da imagem e prepara a versão nova.
+  SHA256SUMS
+      Conferir com: sha256sum -c SHA256SUMS
+
+COMO INCORPORAR (no computador do gerador de ISO)
+  1. Conferir o pacote:
+         tar xzf central-suporte-imagem-@VERSAO_CENTRAL@.tar.gz
+         cd central-suporte-imagem-@VERSAO_CENTRAL@ && sha256sum -c SHA256SUMS
+  2. Incorporar (o repositório deve estar na 1.4-0 ou 1.4-1, com a Central do Suporte):
+         ./incorporar.sh /caminho/do/Seduc-Xubuntu.26.04
+     A versão nova é X.(Y+1)-0 (1.4-1 -> 1.5-0), recurso novo pela regra do CLAUDE.md.
+     Para outra: ./incorporar.sh /caminho/do/repositorio 1.5-0
+     O script confere todos os patches antes de mudar qualquer arquivo.
+  3. Conferir: git diff --stat   (e git diff para ler)
+  4. Gerar a ISO: ./build.sh  (como de costume)
+  5. Commit quando quiser. O .deb em debs/ fica fora do Git, como os outros.
+
+O QUE O incorporar.sh MUDA
+  - overlay/usr/local/seduc/version e changelog (seção da versão nova)
+  - SCRIPT_VERSION dos 7 scripts alterados = versão nova
+  - overlay/usr/local/seduc/central.d: X-SEDUC-Web nos itens 10, 20, 30, 40, 50 e 90
+    (o central_suporte.sh do yad ignora a chave); item 60 passa a se chamar VDE-CE
+  - config/arquivos-atualizador.txt: painel_tokens.sh, instalar_tokens.sh,
+    painel_ad.sh e painel_impressora_ad.sh
+  - debs/: copia o seduc-central-suporte_*.deb
+
+MÁQUINAS JÁ INSTALADAS
+  O seduc_setup.sh leva os scripts novos (arquivos-atualizador.txt), mas não o
+  programa central-suporte: nelas tudo continua no yad, sem quebrar. Para levar a
+  Central web a elas, o pacote seduc-central-suporte precisa ir para o repositório
+  APT (assinado) ou ser instalado pelo seduc_setup.sh. Para publicar o seduc_setup.sh,
+  ele recebe a versão nova (regra do CLAUDE.md) e o tools/publicar-seduc-setup.sh.
+
+FICA DE FORA (por enquanto)
+  - O agente Go do VDE-CE: a tela dele já abre na mesma janela da Central, mas o
+    pacote do agente Go (etapa 4) ainda não foi aprovado. O item 60 continua abrindo
+    o netmonitor-agent-gui do pacote atual, só com o nome VDE-CE.
+
+TESTAR SEM GERAR ISO
+  sudo apt install ./debs/seduc-central-suporte_@VERSAO_CENTRAL@_amd64.deb
+  central-suporte --itens <central.d> --scripts <scripts>   (pastas com os patches)
+  central-suporte --yad não existe: o --yad é do central_suporte.sh.

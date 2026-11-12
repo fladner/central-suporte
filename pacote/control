@@ -1,0 +1,15 @@
+Package: seduc-central-suporte
+Version: @VERSAO@
+Architecture: amd64
+Maintainer: Tadeu Fladiner Costa Pereira <fladner@gmail.com>
+Section: admin
+Priority: optional
+Depends: pkexec, xdg-utils
+Recommends: google-chrome-stable | chromium | chromium-browser
+Installed-Size: @TAMANHO@
+Description: Central do Suporte SEDUC em web
+ A Central do Suporte do Xubuntu SEDUC numa janela de aplicativo do Chrome, no
+ estilo do BigLinux: Boas-vindas e usuarios, Atualizar o sistema, Active
+ Directory, Impressoras SEDUC, Instalador de Tokens e Coletar logs na mesma
+ janela. O trabalho continua nos scripts da imagem (/usr/local/seduc/scripts),
+ com a senha pedida pelo pkexec. Servidor so em 127.0.0.1, entrada de uso unico.
