@@ -49,3 +49,7 @@ func senhaRecusada(codigo int) bool { return codigo == 126 || codigo == 127 }
 func semQuebra(s string) bool {
 	return !strings.ContainsAny(s, "\r\n\x00") && !strings.HasPrefix(s, "-")
 }
+
+// reiniciar pede o reinício pelo systemd (o usuário da sessão ativa pode, pelo polkit).
+// Variável para os testes não reiniciarem a máquina.
+var reiniciar = func() error { return exec.Command("systemctl", "reboot").Start() }

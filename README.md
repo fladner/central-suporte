@@ -47,7 +47,7 @@ linhas `RESULTADO_<NOME>=valor`.
 | `tokens` | `painel_tokens.sh --listar` e `pkexec instalar_tokens.sh` | pronta |
 | `ad` e `impressoras` | `painel_ad.sh --listar` e `pkexec ingressar_ad.sh` (senha do AD pela entrada padrão); `painel_impressora_ad.sh --listar/--kinit/--padrao` e `pkexec instalar_impressora_ad.sh` | prontas |
 | Atualizar o sistema | `atualizar_sistema.sh` | depois |
-| Boas-vindas e usuários | `welcome.sh` | por último |
+| `boas-vindas` | `welcome.sh --listar` e `pkexec criar_usuarios.sh`; no primeiro login o `welcome.sh` abre `central-suporte --abrir boas-vindas` (se instalada) | pronta |
 
 ## Compilar e testar
 
@@ -55,5 +55,5 @@ linhas `RESULTADO_<NOME>=valor`.
 docker run --rm -v "$PWD:/src" -w /src golang:1.25-alpine sh -c 'go vet ./... && go test ./... && CGO_ENABLED=0 go build -trimpath -ldflags "-X main.Versao=0.1.0" -o central-suporte .'
 ```
 
-Opções: `--sem-janela` (só mostra o endereço de entrada), `--porta N`, `--itens DIR`,
+Opções: `--sem-janela` (só mostra o endereço de entrada), `--abrir PÁGINA`, `--porta N`, `--itens DIR`,
 `--scripts DIR`, `--ad-conf ARQ`, `-version`.

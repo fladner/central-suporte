@@ -30,6 +30,8 @@ type Comando struct {
 	Argv   []string
 	Limite time.Duration
 	Fim    AoTerminar
+	// Mensagem inicial da página enquanto o script não manda "# texto".
+	Mensagem string
 	// Entrada vai para a entrada padrão do comando (senha), nunca para o argv.
 	Entrada string
 }
@@ -60,4 +62,5 @@ var paginas = map[string]*Pagina{
 	"tokens":      paginaTokens,
 	"ad":          paginaAD,
 	"impressoras": paginaImpressoras,
+	"boas-vindas": paginaBoasVindas,
 }

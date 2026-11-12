@@ -21,13 +21,14 @@ func main() {
 	itens := flag.String("itens", "/usr/local/seduc/central.d", "pasta dos itens (.desktop)")
 	scripts := flag.String("scripts", "/usr/local/seduc/scripts", "pasta dos scripts de trabalho")
 	adConf := flag.String("ad-conf", "/usr/local/seduc/ad/ad.conf", "configuração do AD (GRUPOS_ADMIN)")
+	abrir := flag.String("abrir", "", "página web para abrir direto (ex.: boas-vindas)")
 	versao := flag.Bool("version", false, "mostra a versão")
 	flag.Parse()
 	if *versao {
 		fmt.Println("central-suporte", Versao)
 		return
 	}
-	c := &Central{Itens: *itens, Scripts: *scripts, AdConf: *adConf, Versao: Versao}
+	c := &Central{Itens: *itens, Scripts: *scripts, AdConf: *adConf, Versao: Versao, Abrir: *abrir}
 	l, err := c.Ouvir(*porta)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "central-suporte: não foi possível abrir a porta local:", err)

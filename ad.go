@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -121,7 +120,7 @@ var paginaAD = &Pagina{
 	},
 	Acoes: map[string]func(*Central, map[string]string) error{
 		"reiniciar": func(c *Central, _ map[string]string) error {
-			return exec.Command("systemctl", "reboot").Start()
+			return reiniciar()
 		},
 	},
 }

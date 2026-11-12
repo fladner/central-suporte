@@ -105,7 +105,11 @@ type AoTerminar func(codigo int, resultado map[string]string) (relatorio [][2]st
 // fim pode ser nil.
 func (ts *Tarefas) Iniciar(pagina string, cmdo Comando) *Tarefa {
 	argv, limite, fim := cmdo.Argv, cmdo.Limite, cmdo.Fim
-	t := &Tarefa{ID: novoID(), Pagina: pagina, Mensagem: "Iniciando...", Resultado: map[string]string{}}
+	msg := "Iniciando..."
+	if cmdo.Mensagem != "" {
+		msg = cmdo.Mensagem
+	}
+	t := &Tarefa{ID: novoID(), Pagina: pagina, Mensagem: msg, Resultado: map[string]string{}}
 	ts.mu.Lock()
 	if ts.todas == nil {
 		ts.todas = map[string]*Tarefa{}

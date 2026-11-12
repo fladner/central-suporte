@@ -1,0 +1,51 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel">
+  <h1>Boas-vindas e usuários</h1>
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
+  {{if .Tarefa}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Criando usuários e configurando o computador...</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <div class="concluido" hidden>
+      <p class="ok" data-aviso></p>
+      <button class="primario" type="button" data-acao="reiniciar">Reiniciar agora</button>
+      <a class="botao" href="/">Depois</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro" data-aviso></p>
+      <details><summary>Detalhes técnicos</summary><pre class="registro"></pre></details>
+      <a class="botao" href="/pagina/boas-vindas">Tentar de novo</a>
+      <a class="botao" href="/">Voltar ao início</a>
+    </div>
+  </div>
+  {{else}}{{with .Extra}}
+  {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>
+  {{else if .Live}}<p class="erro">A criação de usuários não funciona no modo de teste (Live). Instale o sistema primeiro.</p>
+  {{else if .Grupos}}
+  <div class="boas-vindas">
+    <p><b>Bem-vindo(a), administrador(a)!</b></p>
+    <p>Este é o Linux da Secretaria da Educação - SEDUC{{with .Sistema}}, baseado no <b>{{.}}</b>{{end}}.
+    Agora vamos preparar este computador para uso: escolha quais usuários serão criados nele.</p>
+  </div>
+  <form method="post" action="/pagina/boas-vindas/iniciar">
+    {{range .Grupos}}
+    <fieldset>
+      <legend>{{.Nome}}</legend>
+      {{range .Usuarios}}
+      <label class="opcao"><input type="checkbox" name="usuario" value="{{.Login}}">
+        <span>{{.Nome}}</span><small>login e senha padrão: <code>{{.Login}}</code></small>{{if .Existe}}<em class="etiqueta">já existe</em>{{end}}</label>
+      {{end}}
+    </fieldset>
+    {{end}}
+    <p class="secundario">O <b>primeiro usuário marcado</b>, na ordem da lista, define o nome do computador e o tema.
+    Recomenda-se alterar as senhas após o primeiro login.</p>
+    <label class="opcao"><input type="checkbox" name="confirmo" value="sim" required>
+      <span>Confirmo criar os usuários marcados com a senha padrão (igual ao login).</span></label>
+    <p class="secundario">A senha do administrador será solicitada a seguir.</p>
+    <button class="primario" type="submit">Criar usuários</button>
+  </form>
+  {{end}}
+  {{end}}{{end}}
+</section>
+{{template "rodape" .}}

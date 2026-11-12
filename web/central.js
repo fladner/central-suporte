@@ -47,6 +47,8 @@ document.addEventListener("DOMContentLoaded", function () {
       msg.textContent = e.mensagem || "";
       barra.setAttribute("aria-valuenow", e.percentual);
       barra.firstElementChild.style.width = e.percentual + "%";
+      // Sem percentual ainda: a faixa corre, para não parecer travado.
+      barra.classList.toggle("indeterminada", !e.fim && !e.percentual);
       if (!e.fim) { setTimeout(atualizar, 500); return; }
       barra.hidden = true;
       caixa.querySelectorAll("[data-aviso]").forEach(function (a) {

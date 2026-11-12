@@ -37,6 +37,7 @@ type Central struct {
 	Scripts string // pasta dos scripts de trabalho
 	AdConf  string
 	Versao  string // versão da Central
+	Abrir   string // página web para abrir direto depois da entrada (--abrir)
 
 	endereco string
 	chave    string
@@ -147,7 +148,12 @@ func (c *Central) entrar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{Name: "central", Value: c.sessao, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// --abrir: a janela vai direto para a página, se ela estiver visível para este usuário.
+	destino := "/"
+	if c.paginaVisivel(c.Abrir) {
+		destino = "/pagina/" + c.Abrir
+	}
+	http.Redirect(w, r, destino, http.StatusSeeOther)
 }
 
 func (c *Central) rotas(w http.ResponseWriter, r *http.Request) {
@@ -252,20 +258,23 @@ func (c *Central) abrir(w http.ResponseWriter, id string) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// paginaVisivel: a página só abre se algum item visível para este usuário a aponta.
+func (c *Central) paginaVisivel(nome string) bool {
+	if paginas[nome] == nil {
+		return false
+	}
+	for _, it := range listarItens(c.Itens, ehAdmin(c.AdConf)) {
+		if it.Web == nome {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Central) pagina(w http.ResponseWriter, r *http.Request, resto string) {
 	nome, acao, _ := strings.Cut(resto, "/")
 	pg := paginas[nome]
-	// A página só abre se algum item visível para este usuário a aponta.
-	visivel := false
-	if pg != nil {
-		d := c.base("")
-		for _, it := range listarItens(c.Itens, d.Admin) {
-			if it.Web == nome {
-				visivel = true
-			}
-		}
-	}
-	if !visivel {
+	if !c.paginaVisivel(nome) {
 		http.NotFound(w, r)
 		return
 	}

@@ -103,3 +103,9 @@ details { margin: 0 0 16px; }
 .botoes { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
 fieldset.perigo { border-color: var(--erro); margin-top: 22px; }
 fieldset.perigo legend { color: var(--erro); }
+/* Andamento sem percentual (script que não informa): faixa que corre */
+.barra.indeterminada div { width: 35% !important; animation: correr 1.4s ease-in-out infinite; }
+@keyframes correr { from { margin-left: -35%; } to { margin-left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .barra.indeterminada div { animation: none; width: 100% !important; opacity: .5; } }
+.boas-vindas { margin: 0 0 16px; }
+code { font: 13px ui-monospace, Menlo, Consolas, monospace; background: var(--verde-claro); padding: 1px 5px; border-radius: 4px; }

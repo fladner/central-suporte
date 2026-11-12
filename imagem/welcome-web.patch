@@ -1,0 +1,39 @@
+--- a/overlay/usr/local/seduc/scripts/welcome.sh
++++ b/overlay/usr/local/seduc/scripts/welcome.sh
+@@ -26,6 +26,24 @@
+     "gremio|Grêmio|Apoio"
+ )
+ 
++# --listar: para a Central do Suporte em web (antes do log, que toma a saída padrão).
++# Uma linha por informação, separada por "|":
++#   LIVE | ERRO|<texto> | SISTEMA|<nome> | USUARIO|<login>|<nome>|<grupo>|<1 se já existe>
++if [ "${1:-}" = "--listar" ]; then
++    grep -q "casper" /proc/cmdline && echo "LIVE"
++    if ! id -nG | tr ' ' '\n' | grep -qx sudo; then
++        echo "ERRO|Só o administrador local do computador (grupo sudo) cria os usuários."
++        exit 0
++    fi
++    echo "SISTEMA|Xubuntu 26.04 LTS"
++    for ITEM in "${USUARIOS[@]}"; do
++        IFS="|" read -r LOGIN NOME GRUPO <<< "$ITEM"
++        id -u "$LOGIN" >/dev/null 2>&1 && EXISTE=1 || EXISTE=0
++        echo "USUARIO|$LOGIN|$NOME|$GRUPO|$EXISTE"
++    done
++    exit 0
++fi
++
+ #########
+ ## LOG ##
+ #########
+@@ -181,6 +199,11 @@
+     exit 0
+ fi
+ check_admin
++# Com a Central do Suporte em web instalada, o primeiro login abre a página dela
++if (( ! CENTRAL )) && command -v central-suporte >/dev/null 2>&1; then
++    echo "Abrindo a Central do Suporte em web (boas-vindas)"
++    exec central-suporte --abrir boas-vindas
++fi
+ show_welcome || exit 0
+ 
+ while true; do
