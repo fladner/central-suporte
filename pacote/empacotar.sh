@@ -35,6 +35,7 @@ docker run --rm --network none -v "$PROJETO:/src:ro" -v "$TMP:/saida" -w /src -e
 echo "==> Montando o .deb"
 RAIZ="$TMP/raiz"
 install -D -m 755 "$TMP/central-suporte" "$RAIZ/usr/bin/central-suporte"
+install -D -m 755 "$PROJETO/janela/janela.py" "$RAIZ/usr/lib/seduc-central-suporte/janela.py"
 install -D -m 644 "$PROJETO/README.md" "$RAIZ/usr/share/doc/seduc-central-suporte/README.md"
 TAMANHO="$(du -sk "$RAIZ" | cut -f1)"
 install -d -m 755 "$RAIZ/DEBIAN"

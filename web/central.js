@@ -25,6 +25,47 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // Boas-vindas: nome da escola pelo INEP antes de criar os usuários
+  var consulta = document.querySelector("[data-consultar-inep]");
+  if (consulta) {
+    var campoInep = document.getElementById("inep");
+    var conferido = document.getElementById("inep_conferido");
+    var achada = document.getElementById("escola-encontrada");
+    campoInep.addEventListener("input", function () {
+      conferido.value = "";
+      achada.textContent = "";
+    });
+    consulta.addEventListener("click", function () {
+      var codigo = campoInep.value.replace(/\D/g, "");
+      conferido.value = "";
+      if (codigo.length !== 8) {
+        achada.textContent = "O INEP tem 8 números.";
+        return;
+      }
+      consulta.disabled = true;
+      achada.textContent = "Consultando o INEP " + codigo + "...";
+      fetch(consulta.dataset.consultarInep + "?inep=" + codigo, { credentials: "same-origin" }).then(function (r) {
+        return r.json();
+      }).then(function (e) {
+        if (e.situacao === "ESCOLA") {
+          achada.textContent = "Escola encontrada: " + e.escola;
+          conferido.value = codigo;
+        } else if (e.situacao === "SEMREDE") {
+          achada.textContent = "Não foi possível consultar o INEP agora (sem internet?). Pode continuar: o computador fica com o INEP, sem o nome da escola.";
+          conferido.value = codigo;
+        } else if (e.situacao === "NAOENCONTRADA") {
+          achada.textContent = "Nenhuma escola encontrada com o INEP " + codigo + ". Verifique o código.";
+        } else {
+          achada.textContent = "O INEP informado é inválido.";
+        }
+      }).catch(function () {
+        achada.textContent = "Não foi possível consultar o INEP.";
+      }).finally(function () {
+        consulta.disabled = false;
+      });
+    });
+  }
+
   var caixa = document.querySelector("[data-tarefa]");
   if (!caixa) return;
   var id = caixa.dataset.tarefa;

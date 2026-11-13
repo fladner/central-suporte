@@ -1,0 +1,29 @@
+{{template "topo" .}}
+<p class="voltar"><a href="/">&larr; Ferramentas de suporte</a></p>
+<section class="painel pagina-bash">
+  <h1>{{.Titulo}}</h1>
+  {{if .Tarefa}}
+  <div class="tarefa" data-tarefa="{{.Tarefa}}">
+    <p class="mensagem" role="status" aria-live="polite">Iniciando...</p>
+    <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
+    <pre class="saida" data-saida aria-label="Saída"></pre>
+    <p class="secundario" data-enquanto>Pode fechar esta janela: a tarefa continua até o fim.</p>
+    <div class="concluido" hidden>
+      <p class="ok" data-aviso hidden></p>
+      <a class="botao" href="/bash/{{.NomePagina}}">Voltar</a>
+    </div>
+    <div class="falhou" hidden>
+      <p class="erro" data-aviso hidden></p>
+      <p class="erro">A tarefa terminou com erro. Os detalhes estão na saída acima.</p>
+      <a class="botao" href="/bash/{{.NomePagina}}">Voltar</a>
+    </div>
+  </div>
+  {{else}}{{with .Extra}}
+  {{if .Falhou}}
+  <p class="erro" role="alert">A página não pôde ser montada (código {{.Codigo}}).</p>
+  {{if .Detalhe}}<pre class="registro">{{.Detalhe}}</pre>{{end}}
+  {{end}}
+  {{.HTML}}
+  {{end}}{{end}}
+</section>
+{{template "rodape" .}}

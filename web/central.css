@@ -111,3 +111,20 @@ fieldset.perigo legend { color: var(--erro); }
 code { font: 13px ui-monospace, Menlo, Consolas, monospace; background: var(--verde-claro); padding: 1px 5px; border-radius: 4px; }
 pre.saida { max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 12px; }
 pre.saida:empty { display: none; }
+/* Boas-vindas: escola, CREDE ou SEDUC (mostra só os campos do tipo marcado) */
+.boas-vindas-form select { width: 100%; max-width: 440px; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; font: inherit; background: var(--cartao); color: inherit; }
+.boas-vindas-form .linha { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.boas-vindas-form .linha input { max-width: 220px; }
+.boas-vindas-form:not(:has(input[name=tipo][value=escola]:checked)) .so-escola,
+.boas-vindas-form:not(:has(input[name=tipo][value=crede]:checked)) .so-crede { display: none; }
+.sobre-topo { display: flex; align-items: center; gap: 14px; margin: 0 0 12px; }
+.sobre-topo img { border-radius: 10px; }
+.sobre-topo h1 { margin: 0; }
+.sobre .relatorio th { width: 38%; vertical-align: top; }
+.sobre summary { cursor: pointer; font-weight: 600; color: var(--verde-escuro); }
+.sobre-sub { font-size: 16px; color: var(--verde-escuro); margin: 22px 0 8px; }
+.sobre details.versao { border-top: 1px solid var(--borda); margin: 0; padding: 9px 0; }
+.sobre details.versao summary small { color: var(--secundario); font-weight: 400; margin-left: 6px; }
+.novidades { margin: 10px 0 0; padding-left: 20px; }
+.novidades li { margin: 0 0 8px; }
+.sobre a { color: var(--verde); }

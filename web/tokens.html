@@ -5,7 +5,7 @@
   {{if .Erro}}<p class="erro" role="alert">{{.Erro}}</p>{{end}}
   {{if .Tarefa}}
   <div class="tarefa" data-tarefa="{{.Tarefa}}">
-    <p class="mensagem" role="status" aria-live="polite">Iniciando... o sistema vai pedir a senha do administrador.</p>
+    <p class="mensagem" role="status" aria-live="polite">Iniciando... o sistema pode pedir a senha do administrador.</p>
     <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div></div></div>
     <div class="concluido" hidden>
       <p class="ok" data-aviso></p>
@@ -45,7 +45,7 @@
         <span>{{.Nome}}</span>{{if .Obs}}<small>{{.Obs}}</small>{{end}}</label>
       {{end}}
     </fieldset>
-    <p class="secundario">A instalação pede a senha do administrador e pode levar alguns minutos.</p>
+    <p class="secundario">A instalação pode levar alguns minutos. A senha do administrador é pedida para os usuários deste computador; os usuários do Active Directory instalam sem ela.</p>
     <button class="primario" type="submit">Instalar</button>
   </form>
   {{end}}

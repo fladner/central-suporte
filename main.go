@@ -22,6 +22,9 @@ func main() {
 	scripts := flag.String("scripts", "/usr/local/seduc/scripts", "pasta dos scripts de trabalho")
 	adConf := flag.String("ad-conf", "/usr/local/seduc/ad/ad.conf", "configuração do AD (GRUPOS_ADMIN)")
 	abrir := flag.String("abrir", "", "página web para abrir direto (ex.: boas-vindas)")
+	chrome := flag.Bool("chrome", false, "abre no Chrome em vez da janela nativa (WebKitGTK)")
+	flag.StringVar(&visualizador, "visualizador", visualizador, "programa da janela nativa")
+	flag.StringVar(&changelogSistema, "changelog", changelogSistema, "changelog do sistema (Sobre)")
 	versao := flag.Bool("version", false, "mostra a versão")
 	flag.Parse()
 	if *versao {
@@ -37,9 +40,10 @@ func main() {
 	srv := &http.Server{Handler: c, ReadHeaderTimeout: 10 * time.Second}
 	go srv.Serve(l)
 	go c.Vigiar()
+	go aquecerIcones(*itens)
 	fmt.Println("central=" + c.URLEntrada())
 	if !*semJanela {
-		if err := abrirJanela(c.URLEntrada()); err != nil {
+		if err := c.abrirJanela(c.URLEntrada(), *chrome); err != nil {
 			fmt.Fprintln(os.Stderr, "central-suporte: não foi possível abrir a janela:", err)
 		}
 	}
@@ -47,9 +51,9 @@ func main() {
 	_ = srv.Close()
 }
 
-// abrirJanela abre como janela de aplicativo (sem barra de endereço) no Chrome ou Chromium
-// da imagem; sem eles, no navegador padrão.
-func abrirJanela(url string) error {
+// abrirNavegador abre como janela de aplicativo (sem barra de endereço) no Chrome ou
+// Chromium da imagem; sem eles, no navegador padrão. É a reserva da janela nativa.
+func abrirNavegador(url string) error {
 	for _, nav := range []string{"google-chrome", "google-chrome-stable", "chromium", "chromium-browser"} {
 		if caminho, err := exec.LookPath(nav); err == nil {
 			cmd := exec.Command(caminho, argumentosJanela(url, pastaPerfil(), saidaXrandr())...)

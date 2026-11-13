@@ -12,11 +12,14 @@ import (
 // Item é um ícone da Central, lido de um .desktop de /usr/local/seduc/central.d.
 // As regras são as do central_suporte.sh (yad):
 //   - X-SEDUC-Acesso=admin: só para administradores (grupo sudo e GRUPOS_ADMIN do ad.conf);
+//   - X-SEDUC-Acesso=ad: para administradores e usuários do Active Directory (Impressoras
+//     SEDUC); os usuários locais comuns não veem;
 //   - TryExec: o item some quando o programa não existe;
 //   - ordem pelo nome do arquivo.
 //
 // Novo: X-SEDUC-Web=<página> abre a página web da própria Central em vez do Exec.
 // O central_suporte.sh ignora a chave, então o mesmo .desktop serve para as duas.
+// Novo: X-SEDUC-Bash=<nome> abre a página feita pelo script central.d/paginas/<nome>.sh.
 // Novo: X-SEDUC-Mesma-Janela=true para programas com página web própria (a tela do VDE-CE):
 // a Central os chama com --sem-navegador --voltar <Central> e abre a página deles na mesma
 // janela (ver externos.go).
@@ -29,7 +32,8 @@ type Item struct {
 	Acesso    string
 	TryExec   string
 	Web       string
-	Mesma     bool // X-SEDUC-Mesma-Janela=true
+	Mesma     bool   // X-SEDUC-Mesma-Janela=true
+	Bash      string // X-SEDUC-Bash=<nome>: página em bash (bashpaginas.go)
 }
 
 func lerDesktop(caminho string) (Item, bool) {
@@ -74,9 +78,11 @@ func lerDesktop(caminho string) (Item, bool) {
 			it.Mesma = strings.EqualFold(valor, "true")
 		case "X-SEDUC-Web":
 			it.Web = valor
+		case "X-SEDUC-Bash":
+			it.Bash = valor
 		}
 	}
-	return it, it.Nome != "" && (it.Exec != "" || it.Web != "")
+	return it, it.Nome != "" && (it.Exec != "" || it.Web != "" || it.Bash != "")
 }
 
 // listarItens devolve os itens que este usuário pode ver, na ordem do nome do arquivo.
@@ -92,6 +98,9 @@ func listarItens(pasta string, admin bool) []Item {
 		if it.Acesso == "admin" && !admin {
 			continue
 		}
+		if it.Acesso == "ad" && !admin && !usuarioAD() {
+			continue
+		}
 		if it.TryExec != "" && !executavel(it.TryExec) {
 			continue
 		}
@@ -102,9 +111,28 @@ func listarItens(pasta string, admin bool) []Item {
 			}
 			it.Web = ""
 		}
+		if it.Bash != "" {
+			if _, ok := scriptBash(pasta, it.Bash); !ok {
+				// Script ausente ou inseguro (dono, permissão): usa o Exec, se houver.
+				if it.Exec == "" && it.Web == "" {
+					continue
+				}
+				it.Bash = ""
+			}
+		}
 		itens = append(itens, it)
 	}
 	return itens
+}
+
+// uidAtual: trocado nos testes
+var uidAtual = os.Getuid
+
+// usuarioAD: UID na faixa do idmap do winbind (ad/smb.conf: 1000000 - 19999999), a mesma
+// da regra do polkit 60-seduc-ad.rules.
+func usuarioAD() bool {
+	u := uidAtual()
+	return u >= 1000000 && u <= 19999999
 }
 
 func executavel(caminho string) bool {

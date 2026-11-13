@@ -130,6 +130,9 @@ func (ts *Tarefas) Iniciar(pagina string, cmdo Comando) *Tarefa {
 		ctx, cancelar := context.WithTimeout(context.Background(), limite)
 		defer cancelar()
 		cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
+		if cmdo.Env != nil {
+			cmd.Env = cmdo.Env
+		}
 		// Entrada: segredo para a 1ª linha da entrada padrão (senha do AD), nunca no argv.
 		if cmdo.Entrada != "" {
 			cmd.Stdin = strings.NewReader(cmdo.Entrada)

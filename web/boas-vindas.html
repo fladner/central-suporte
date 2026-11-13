@@ -28,7 +28,49 @@
     <p>Este é o Linux da Secretaria da Educação - SEDUC{{with .Sistema}}, baseado no <b>{{.}}</b>{{end}}.
     Agora vamos preparar este computador para uso: escolha quais usuários serão criados nele.</p>
   </div>
-  <form method="post" action="/pagina/boas-vindas/iniciar">
+  <form class="boas-vindas-form" method="post" action="/pagina/boas-vindas/iniciar" autocomplete="off">
+    {{$tipo := or (index $.Form "tipo") .Ident.Tipo "escola"}}
+    {{$amb := or (index $.Form "ambiente_escola") (index $.Form "ambiente_crede") .Ident.Ambiente}}
+    <fieldset>
+      <legend>Onde fica este computador</legend>
+      {{with .Ident.Computador}}<p class="secundario">Identificação atual: <b>{{.}}</b>{{with $.Extra.Ident.Escola}} ({{.}}){{end}}</p>{{end}}
+      <label class="opcao"><input type="radio" name="tipo" value="escola"{{if eq $tipo "escola"}} checked{{end}}><span>Escola</span></label>
+      <label class="opcao"><input type="radio" name="tipo" value="crede"{{if eq $tipo "crede"}} checked{{end}}><span>CREDE</span></label>
+      <label class="opcao"><input type="radio" name="tipo" value="seduc"{{if eq $tipo "seduc"}} checked{{end}}><span>SEDUC</span><small>sem identificação; o nome vem do primeiro usuário ou do ingresso no AD</small></label>
+
+      <div class="so-escola campos">
+        <label for="inep">INEP da escola (8 números)</label>
+        <div class="linha">
+          <input id="inep" name="inep" type="text" inputmode="numeric" maxlength="12" value="{{or (index $.Form "inep") .Ident.INEP}}">
+          <button class="botao" type="button" data-consultar-inep="/pagina/boas-vindas/inep">Consultar escola</button>
+        </div>
+        <input type="hidden" id="inep_conferido" name="inep_conferido" value="{{index $.Form "inep_conferido"}}">
+        <p class="secundario" id="escola-encontrada" role="status" aria-live="polite"></p>
+        <label for="ambiente_escola">Ambiente</label>
+        <select id="ambiente_escola" name="ambiente_escola">
+          <option value="">Escolha...</option>
+          {{range .AmbientesDe "escola"}}<option value="{{.Sigla}}"{{if eq .Sigla $amb}} selected{{end}}>{{.Nome}} ({{.Sigla}})</option>{{end}}
+        </select>
+        <p class="secundario">Nome do computador: <code>INEP-AMBIENTE-</code> e os 4 últimos dígitos do serial, ex.: <code>23012345-LMAT-1234</code>. Sem o INEP, o computador fica com o nome atual (<code>{{$.Computador}}</code>).</p>
+      </div>
+
+      <div class="so-crede campos">
+        <label for="crede">CREDE</label>
+        <select id="crede" name="crede">
+          <option value="">Escolha...</option>
+          {{$cr := or (index $.Form "crede") .Ident.CREDE}}
+          {{range .Credes}}<option value="{{.}}"{{if eq . $cr}} selected{{end}}>CREDE {{.}}</option>{{end}}
+        </select>
+        <label for="ambiente_crede">Setor</label>
+        <select id="ambiente_crede" name="ambiente_crede">
+          <option value="">Escolha...</option>
+          {{range .AmbientesDe "crede"}}<option value="{{.Sigla}}"{{if eq .Sigla $amb}} selected{{end}}>{{.Nome}} ({{.Sigla}})</option>{{end}}
+        </select>
+        <p class="secundario">Nome do computador: <code>CR</code>, o número da CREDE, o setor e os 4 últimos dígitos do serial, ex.: <code>CR05-INF-1234</code>.</p>
+      </div>
+      <p class="secundario">Se outra máquina da rede já tiver esse nome, o sistema usa mais dígitos do serial.</p>
+    </fieldset>
+
     {{range .Grupos}}
     <fieldset>
       <legend>{{.Nome}}</legend>
@@ -38,7 +80,7 @@
       {{end}}
     </fieldset>
     {{end}}
-    <p class="secundario">O <b>primeiro usuário marcado</b>, na ordem da lista, define o nome do computador e o tema.
+    <p class="secundario">O <b>primeiro usuário marcado</b>, na ordem da lista, define o tema{{/* e, na SEDUC, o nome do computador */}}.
     Recomenda-se alterar as senhas após o primeiro login.</p>
     <label class="opcao"><input type="checkbox" name="confirmo" value="sim" required>
       <span>Confirmo criar os usuários marcados com a senha padrão (igual ao login).</span></label>

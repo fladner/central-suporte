@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -93,4 +94,54 @@ func saidaXrandr() string {
 		return ""
 	}
 	return string(out)
+}
+
+// Janela nativa (janela/janela.py, WebKitGTK), como o BigBashView: sem o Chrome no caminho.
+// O endereço de entrada vai pela entrada padrão. Se faltar o WebKitGTK (saída 3), a
+// entrada não foi usada e a Central abre o Chrome. Fechar a janela encerra a Central
+// (depois das tarefas em andamento).
+var visualizador = "/usr/lib/seduc-central-suporte/janela.py"
+
+const semWebKit = 3
+
+// navegador: reserva sem o WebKitGTK (trocada nos testes)
+var navegador = abrirNavegador
+
+func argumentosNativa(xrandr string) []string {
+	mon, ok := monitorPrincipal(xrandr)
+	if !ok {
+		return nil
+	}
+	l, a, x, y := geometria(mon)
+	return []string{"--largura", strconv.Itoa(l), "--altura", strconv.Itoa(a), "--x", strconv.Itoa(x), "--y", strconv.Itoa(y)}
+}
+
+func (c *Central) abrirJanela(url string, chrome bool) error {
+	if chrome || !executavel(visualizador) {
+		return navegador(url)
+	}
+	cmd := exec.Command(visualizador, argumentosNativa(saidaXrandr())...)
+	cmd.Stdin = strings.NewReader(url + "\n")
+	cmd.Stdout, cmd.Stderr = os.Stderr, os.Stderr
+	if err := cmd.Start(); err != nil {
+		return navegador(url)
+	}
+	go func() {
+		err := cmd.Wait()
+		var saiu *exec.ExitError
+		if errors.As(err, &saiu) && saiu.ExitCode() == semWebKit {
+			if navegador(url) == nil {
+				return
+			}
+		}
+		c.janelaFechada()
+	}()
+	return nil
+}
+
+// janelaFechada: a Central encerra no próximo giro do Vigiar, sem esperar o sinal.
+func (c *Central) janelaFechada() {
+	c.mu.Lock()
+	c.fechada = true
+	c.mu.Unlock()
 }

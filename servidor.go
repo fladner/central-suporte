@@ -49,7 +49,8 @@ type Central struct {
 	ultimo   time.Time
 	fim      chan struct{}
 	fechar   sync.Once
-	externos int // programas abertos na mesma janela (externos.go)
+	externos int  // programas abertos na mesma janela (externos.go)
+	fechada  bool // a janela nativa foi fechada (janela.go)
 }
 
 func aleatorio(n int) string {
@@ -81,7 +82,9 @@ func (c *Central) URLEntrada() string {
 func (c *Central) encerrar() { c.fechar.Do(func() { close(c.fim) }) }
 
 // Vigiar encerra depois de 15 minutos sem nenhum pedido; a página manda um sinal a cada
-// 20 s, então fechar a janela encerra a Central em cerca de um minuto.
+// 20 s, então fechar a janela do Chrome encerra a Central em cerca de um minuto, e a
+// janela nativa, em até 10 s (janelaFechada). Com tarefa ou programa externo rodando,
+// espera eles terminarem.
 func (c *Central) Vigiar() {
 	t := time.NewTicker(10 * time.Second)
 	defer t.Stop()
@@ -94,8 +97,9 @@ func (c *Central) Vigiar() {
 			parado := time.Since(c.ultimo)
 			usada := c.usada
 			externos := c.externos + c.tarefas.Ativas()
+			fechada := c.fechada
 			c.mu.Unlock()
-			if externos == 0 && ((usada && parado > 70*time.Second) || parado > 15*time.Minute) {
+			if externos == 0 && (fechada || (usada && parado > 70*time.Second) || parado > 15*time.Minute) {
 				c.encerrar()
 				return
 			}
@@ -178,6 +182,8 @@ func (c *Central) rotas(w http.ResponseWriter, r *http.Request) {
 		c.abrir(w, strings.TrimPrefix(p, "/abrir/"))
 	case strings.HasPrefix(p, "/pagina/"):
 		c.pagina(w, r, strings.TrimPrefix(p, "/pagina/"))
+	case strings.HasPrefix(p, "/bash/"):
+		c.paginaBash(w, r, strings.TrimPrefix(p, "/bash/"))
 	case strings.HasPrefix(p, "/tarefa/"):
 		c.tarefa(w, r, strings.TrimPrefix(p, "/tarefa/"))
 	default:
@@ -310,6 +316,9 @@ func (c *Central) pagina(w http.ResponseWriter, r *http.Request, resto string) {
 			return
 		}
 		http.Redirect(w, r, "/pagina/"+nome, http.StatusSeeOther)
+	case r.Method == http.MethodGet && pg.Consultas[acao] != nil:
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(pg.Consultas[acao](c, r))
 	default:
 		http.NotFound(w, r)
 	}
@@ -341,7 +350,11 @@ func (c *Central) tarefa(w http.ResponseWriter, r *http.Request, resto string) {
 		return
 	}
 	pg := paginas[t.Pagina]
+	if pg == nil {
+		pg = &Pagina{} // tarefa de página em bash: sem ações depois do fim
+	}
 	switch {
+	case acao == "" && r.Method == http.MethodGet && c.tarefaBash(w, r, t):
 	case acao == "" && r.Method == http.MethodGet:
 		d := c.base(pg.Titulo)
 		d.Pagina, d.NomePagina, d.Tarefa = pg, t.Pagina, t.ID

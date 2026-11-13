@@ -7,6 +7,8 @@
   <li>
     {{if .Web}}
     <a class="item" href="/pagina/{{.Web}}">
+    {{else if .Bash}}
+    <a class="item" href="/bash/{{.Bash}}">
     {{else if .Mesma}}
     <form method="post" action="/externo/{{.ID}}"><button class="item" type="submit">
     {{else}}
@@ -15,7 +17,7 @@
       <img src="/icone/{{.ID}}" alt="" width="48" height="48">
       <span class="nome">{{.Nome}}</span>
       <span class="desc">{{.Descricao}}</span>
-    {{if .Web}}</a>{{else if .Mesma}}</button></form>{{else}}</button>{{end}}
+    {{if or .Web .Bash}}</a>{{else if .Mesma}}</button></form>{{else}}</button>{{end}}
   </li>
   {{end}}
 </ul>

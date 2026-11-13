@@ -46,6 +46,32 @@ func TestListarItensRegrasDoCentralSuporte(t *testing.T) {
 	}
 }
 
+// X-SEDUC-Acesso=ad (Impressoras SEDUC): administrador e usuários do AD veem; usuário
+// local comum não
+func TestAcessoAD(t *testing.T) {
+	d := t.TempDir()
+	escrever(t, d, "40-impressoras.desktop", "[Desktop Entry]\nName=Impressoras\nExec=/bin/true\nX-SEDUC-Acesso=ad\n")
+	antes := uidAtual
+	t.Cleanup(func() { uidAtual = antes })
+	for _, c := range []struct {
+		uid   int
+		admin bool
+		vê    bool
+	}{
+		{1001, false, false},     // aluno, direção... (locais)
+		{1000, true, true},       // administrador local
+		{1000001, false, true},   // usuário do AD
+		{1000001, true, true},    // administrador do AD
+		{20000000, false, false}, // fora da faixa do idmap
+		{999999, false, false},   // abaixo da faixa
+	} {
+		uidAtual = func() int { return c.uid }
+		if got := len(listarItens(d, c.admin)) == 1; got != c.vê {
+			t.Errorf("uid %d admin %v: vê=%v", c.uid, c.admin, got)
+		}
+	}
+}
+
 func TestArgumentosExec(t *testing.T) {
 	casos := map[string][]string{
 		"/usr/local/seduc/scripts/welcome.sh --central": {"/usr/local/seduc/scripts/welcome.sh", "--central"},

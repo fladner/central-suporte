@@ -1,8 +1,12 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 )
 
 const xrandrTres = `Screen 0: minimum 320 x 200, current 5760 x 1080, maximum 16384 x 16384
@@ -52,5 +56,67 @@ func TestArgumentosJanela(t *testing.T) {
 	// Sem xrandr: Chrome escolhe tamanho e posição
 	if got := argumentosJanela("u", "/p", ""); len(got) != 5 {
 		t.Errorf("sem xrandr: %v", got)
+	}
+}
+
+func TestArgumentosNativa(t *testing.T) {
+	got := argumentosNativa(xrandrTres)
+	want := []string{"--largura", "1000", "--altura", "720", "--x", "2380", "--y", "180"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("%v", got)
+	}
+	if got := argumentosNativa(""); got != nil {
+		t.Errorf("sem xrandr: %v", got)
+	}
+}
+
+// Janela nativa: o endereço vai pela entrada padrão (não no argv); fechar a janela marca a
+// Central para encerrar; sem WebKitGTK (saída 3) abre o navegador com o mesmo endereço.
+func TestAbrirJanela(t *testing.T) {
+	d := t.TempDir()
+	recebido := filepath.Join(d, "entrada")
+	argv := filepath.Join(d, "argv")
+	antes, antesNav := visualizador, navegador
+	t.Cleanup(func() { visualizador, navegador = antes, antesNav })
+	var noNavegador []string
+	navegador = func(u string) error { noNavegador = append(noNavegador, u); return nil }
+
+	esperar := func(c *Central, cond func() bool) {
+		t.Helper()
+		for i := 0; i < 100 && !cond(); i++ {
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
+	visualizador = filepath.Join(d, "janela.py")
+	executavelTeste(t, visualizador, `cat > `+recebido+`; echo "$@" > `+argv+"\n")
+	c := &Central{}
+	if err := c.abrirJanela("http://127.0.0.1:1/entrar/chave", false); err != nil {
+		t.Fatal(err)
+	}
+	esperar(c, func() bool { c.mu.Lock(); defer c.mu.Unlock(); return c.fechada })
+	if b, _ := os.ReadFile(recebido); string(b) != "http://127.0.0.1:1/entrar/chave\n" {
+		t.Errorf("entrada: %q", b)
+	}
+	if b, _ := os.ReadFile(argv); strings.Contains(string(b), "chave") {
+		t.Errorf("endereço no argv: %q", b)
+	}
+	if !c.fechada || len(noNavegador) != 0 {
+		t.Errorf("fechada=%v navegador=%v", c.fechada, noNavegador)
+	}
+
+	executavelTeste(t, visualizador, "exit 3\n")
+	c = &Central{}
+	_ = c.abrirJanela("http://127.0.0.1:1/entrar/outra", false)
+	esperar(c, func() bool { return len(noNavegador) > 0 })
+	if len(noNavegador) != 1 || noNavegador[0] != "http://127.0.0.1:1/entrar/outra" || c.fechada {
+		t.Errorf("sem WebKit: navegador=%v fechada=%v", noNavegador, c.fechada)
+	}
+
+	// --chrome, ou sem o visualizador instalado: direto no navegador
+	_ = c.abrirJanela("u1", true)
+	visualizador = filepath.Join(d, "nao-existe")
+	_ = c.abrirJanela("u2", false)
+	if len(noNavegador) != 3 {
+		t.Errorf("navegador: %v", noNavegador)
 	}
 }

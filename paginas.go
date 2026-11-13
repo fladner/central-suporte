@@ -24,6 +24,8 @@ type Pagina struct {
 	// Formularios: ações rápidas sem tarefa (POST /pagina/<nome>/<ação>); um erro volta
 	// para o formulário com a mensagem, o sucesso volta para a página.
 	Formularios map[string]func(c *Central, r *http.Request) error
+	// Consultas: GET /pagina/<nome>/<consulta> devolve JSON (ex.: nome da escola pelo INEP)
+	Consultas map[string]func(c *Central, r *http.Request) any
 }
 
 type Comando struct {
@@ -38,6 +40,8 @@ type Comando struct {
 	Etapa string
 	// Entrada vai para a entrada padrão do comando (senha), nunca para o argv.
 	Entrada string
+	// Env: ambiente do comando (páginas em bash); nil herda o da Central.
+	Env []string
 }
 
 // errFormulario é um erro de formulário que a página mostra como está.
@@ -68,4 +72,5 @@ var paginas = map[string]*Pagina{
 	"impressoras": paginaImpressoras,
 	"boas-vindas": paginaBoasVindas,
 	"atualizar":   paginaAtualizar,
+	"sobre":       paginaSobre,
 }
