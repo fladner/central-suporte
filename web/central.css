@@ -128,3 +128,7 @@ pre.saida:empty { display: none; }
 .novidades { margin: 10px 0 0; padding-left: 20px; }
 .novidades li { margin: 0 0 8px; }
 .sobre a { color: var(--verde); }
+
+/* Campo com botão Copiar (Instalador de Tokens: caminho do CryptoID para a Web PKI) */
+.copiar { display: flex; gap: .5rem; align-items: stretch; flex-wrap: wrap; }
+.copiar input { flex: 1 1 20rem; min-width: 0; padding: 9px 11px; border: 1px solid var(--borda); border-radius: 8px; font-family: monospace; font-size: .95em; }

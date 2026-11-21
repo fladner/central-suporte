@@ -21,6 +21,9 @@ var (
 	relatorioTokens = "/usr/local/seduc/logs/instalar_tokens.relatorio"
 	logTokens       = "/usr/local/seduc/logs/instalar_tokens.log"
 	pkexec          = "pkexec"
+	// Driver PKCS#11 do mToken CryptoID: a extensão Web PKI não o conhece e não aceita
+	// configuração por política; o técnico cola este caminho em "Custom modules"
+	cryptoIDModulo = "/opt/CryptoIDEAdmin/x64/lib/linux/x64/libcryptoide_pkcs11.so"
 )
 
 type opcaoToken struct {
@@ -34,13 +37,19 @@ type dadosTokens struct {
 	Tokens    []opcaoToken
 	Extras    []opcaoToken
 	Erro      string
+	// Caminho do driver do CryptoID para a Web PKI e se ele já está instalado
+	CryptoID          string
+	CryptoIDInstalado bool
 }
 
 func listarTokens(c *Central) dadosTokens {
 	ctx, cancelar := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancelar()
 	saida, err := exec.CommandContext(ctx, filepath.Join(c.Scripts, "painel_tokens.sh"), "--listar").Output()
-	d := dadosTokens{}
+	d := dadosTokens{CryptoID: cryptoIDModulo}
+	if _, e := os.Stat(cryptoIDModulo); e == nil {
+		d.CryptoIDInstalado = true
+	}
 	if err != nil {
 		d.Erro = "Não foi possível ler a lista de tokens (painel_tokens.sh --listar)."
 		return d

@@ -49,6 +49,20 @@
     <button class="primario" type="submit">Instalar</button>
   </form>
   {{end}}
+  {{if not .Live}}
+  <fieldset class="webpki">
+    <legend>Web PKI com o token CryptoID</legend>
+    <p>A extensão Web PKI dos navegadores não encontra o token CryptoID sozinha. Em cada
+    navegador (Firefox e Google Chrome) de cada usuário: clique no ícone da Web PKI, na
+    engrenagem, em <strong>Crypto devices</strong>, cole o caminho abaixo em
+    <strong>Custom modules</strong> e clique em <strong>+</strong>.</p>
+    <div class="copiar">
+      <input type="text" id="caminho-cryptoid" readonly value="{{.CryptoID}}" aria-label="Caminho do driver do CryptoID para a Web PKI">
+      <button type="button" data-copiar="caminho-cryptoid">Copiar</button>
+    </div>
+    {{if not .CryptoIDInstalado}}<p class="secundario">O driver do CryptoID ainda não está instalado neste computador: instale o token mToken CryptoID acima primeiro.</p>{{end}}
+  </fieldset>
+  {{end}}
   {{end}}{{end}}
 </section>
 {{template "rodape" .}}

@@ -11,6 +11,27 @@ setInterval(function () { postar("/sinal").catch(function () {}); }, 20000);
 document.addEventListener("DOMContentLoaded", function () {
   var nota = document.getElementById("nota");
 
+  // Copiar o texto de um campo (ex.: caminho do driver do CryptoID para a Web PKI)
+  document.querySelectorAll("[data-copiar]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var campo = document.getElementById(b.dataset.copiar);
+      if (!campo) return;
+      var pronto = function () {
+        b.textContent = "Copiado";
+        setTimeout(function () { b.textContent = "Copiar"; }, 2500);
+      };
+      campo.focus();
+      campo.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(campo.value).then(pronto, function () {
+          if (document.execCommand("copy")) pronto();
+        });
+      } else if (document.execCommand("copy")) {
+        pronto();
+      }
+    });
+  });
+
   document.querySelectorAll("[data-abrir]").forEach(function (b) {
     b.addEventListener("click", function () {
       var nome = b.querySelector(".nome").textContent;

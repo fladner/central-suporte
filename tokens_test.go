@@ -59,6 +59,17 @@ exit 2
 	if w.Code != 200 || !strings.Contains(corpo, `value="cryptoid" checked`) || !strings.Contains(corpo, `value="logus" checked`) || strings.Contains(corpo, `value="java8" checked`) {
 		t.Fatalf("formulário: %d %s", w.Code, corpo)
 	}
+	// Quadro da Web PKI: caminho para copiar e aviso enquanto o driver não está instalado
+	if !strings.Contains(corpo, `value="`+cryptoIDModulo+`"`) || !strings.Contains(corpo, `data-copiar="caminho-cryptoid"`) || !strings.Contains(corpo, "ainda não está instalado") {
+		t.Errorf("quadro da Web PKI sem o caminho ou sem o aviso: %s", corpo)
+	}
+	antes := cryptoIDModulo
+	cryptoIDModulo = filepath.Join(d, "libcryptoide_pkcs11.so")
+	escrever(t, d, "libcryptoide_pkcs11.so", "")
+	if c2 := pedir(c, "GET", "/pagina/tokens", c.endereco, "", ck).Body.String(); strings.Contains(c2, "ainda não está instalado") || !strings.Contains(c2, cryptoIDModulo) {
+		t.Errorf("com o driver instalado: %s", c2)
+	}
+	cryptoIDModulo = antes
 	for _, f := range []url.Values{
 		{"token": {"outro"}},
 		{"token": {"nenhum"}},
