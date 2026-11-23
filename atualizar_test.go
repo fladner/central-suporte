@@ -66,3 +66,37 @@ echo "==> Instalando atualizações"
 		t.Errorf("live aceito: %d", w.Code)
 	}
 }
+
+// Atualização automática: sem o timer (antes da 1.7-0) não aparece; com ele, mostra o
+// último resultado do atualizar_pacotes.sh.
+func TestStatusAutomatico(t *testing.T) {
+	c := novaCentral(t)
+	escrever(t, c.Itens, "20-at.desktop", "[Desktop Entry]\nName=Atualizar o sistema\nExec=/bin/true\nX-SEDUC-Web=atualizar\nX-SEDUC-Acesso=todos\n")
+	d := t.TempDir()
+	cmdlineKernel = filepath.Join(d, "cmdline")
+	escrever(t, d, "cmdline", "quiet splash\n")
+	timerAuto = filepath.Join(d, "seduc-atualizar.timer")
+	statusAuto = filepath.Join(d, "status")
+	ck := pedir(c, "GET", "/entrar/"+c.chave, c.endereco, "", nil).Result().Cookies()[0]
+	pagina := func() string { return pedir(c, "GET", "/pagina/atualizar", c.endereco, "", ck).Body.String() }
+
+	if p := pagina(); strings.Contains(p, "Atualização automática") {
+		t.Errorf("sem o timer, mostrou a atualização automática")
+	}
+	escrever(t, d, "seduc-atualizar.timer", "")
+	if p := pagina(); !strings.Contains(p, "Ainda não rodou") {
+		t.Errorf("sem status: %s", p)
+	}
+	escrever(t, d, "status", "DATA_TEXTO=22/11/2026 10:15\nORIGEM=automatica\nRESULTADO=parcial\nMENSAGEM=2 pacote(s) ficaram para a próxima vez\nBLOQUEADOS=firefox google-chrome-stable\nREINICIAR=1\nULTIMO_OK_DATA=21/11/2026 09:40\n")
+	p := pagina()
+	for _, s := range []string{"Atualização incompleta", "22/11/2026 10:15", "automática", "firefox google-chrome-stable", "21/11/2026 09:40", "Reinicie"} {
+		if !strings.Contains(p, s) {
+			t.Errorf("faltou %q", s)
+		}
+	}
+	escrever(t, d, "status", "DATA_TEXTO=22/11/2026 11:00\nORIGEM=manual\nRESULTADO=ok\nMENSAGEM=Todos os pacotes atualizados\nREINICIAR=0\nULTIMO_OK_DATA=22/11/2026 11:00\n")
+	p = pagina()
+	if !strings.Contains(p, "Tudo atualizado") || !strings.Contains(p, "pelo Atualizar o sistema") || strings.Contains(p, "Última atualização completa") || strings.Contains(p, "Reinicie") {
+		t.Errorf("ok: %s", p)
+	}
+}

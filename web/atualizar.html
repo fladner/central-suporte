@@ -29,6 +29,20 @@
   <form method="post" action="/pagina/atualizar/iniciar">
     <button class="primario" type="submit">Atualizar</button>
   </form>
+  {{with .Auto}}
+  <fieldset class="automatica">
+    <legend>Atualização automática</legend>
+    <p class="secundario">O computador se atualiza sozinho a cada 3 dias, logo depois de ligar. Se faltar alguma atualização (rede ou proxy), tenta de novo no dia seguinte.</p>
+    {{if .Data}}
+    <p class="{{if .OK}}ok{{else}}erro{{end}}"><strong>{{.Situacao}}</strong>{{if .Mensagem}}: {{.Mensagem}}{{end}}</p>
+    <p class="secundario">Última verificação em {{.Data}} ({{.Origem}}).{{if and (not .OK) .UltimoOK}} Última atualização completa em {{.UltimoOK}}.{{end}}</p>
+    {{if .Bloqueados}}<p class="secundario">Não baixados (proxy ou repositório fora do ar): {{.Bloqueados}}</p>{{end}}
+    {{if .Reiniciar}}<p class="secundario">Reinicie o computador para concluir a atualização.</p>{{end}}
+    {{else}}
+    <p class="secundario">Ainda não rodou neste computador.</p>
+    {{end}}
+  </fieldset>
+  {{end}}
   {{end}}
   {{end}}{{end}}
 </section>
