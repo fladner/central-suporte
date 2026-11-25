@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -128,10 +129,22 @@ func (c *Central) abrirJanela(url string, chrome bool) error {
 	}
 	go func() {
 		err := cmd.Wait()
+		// Sem WebKitGTK (saída 3) ou janela que caiu antes de abrir a Central (falha de
+		// segmentação, outro erro): a Central continua no navegador. Depois de entrar, o
+		// endereço de uso único já foi gasto e a Central encerra. Fechada pelo usuário,
+		// a saída é 0.
 		var saiu *exec.ExitError
-		if errors.As(err, &saiu) && saiu.ExitCode() == semWebKit {
-			if navegador(url) == nil {
-				return
+		if errors.As(err, &saiu) {
+			c.mu.Lock()
+			usada := c.usada
+			c.mu.Unlock()
+			if !usada {
+				if saiu.ExitCode() != semWebKit {
+					fmt.Fprintln(os.Stderr, "central-suporte: a janela nativa caiu ("+saiu.String()+"); abrindo no navegador")
+				}
+				if navegador(url) == nil {
+					return
+				}
 			}
 		}
 		c.janelaFechada()

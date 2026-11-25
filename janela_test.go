@@ -112,11 +112,27 @@ func TestAbrirJanela(t *testing.T) {
 		t.Errorf("sem WebKit: navegador=%v fechada=%v", noNavegador, c.fechada)
 	}
 
+	// Janela que caiu antes de entrar (falha de segmentação): continua no navegador
+	executavelTeste(t, visualizador, "kill -SEGV $$\n")
+	c = &Central{}
+	_ = c.abrirJanela("http://127.0.0.1:1/entrar/caiu", false)
+	esperar(c, func() bool { return len(noNavegador) > 1 })
+	if len(noNavegador) != 2 || noNavegador[1] != "http://127.0.0.1:1/entrar/caiu" || c.fechada {
+		t.Errorf("janela caiu: navegador=%v fechada=%v", noNavegador, c.fechada)
+	}
+	// Caiu depois de entrar: o endereço já foi gasto, a Central encerra
+	c = &Central{usada: true}
+	_ = c.abrirJanela("http://127.0.0.1:1/entrar/gasta", false)
+	esperar(c, func() bool { c.mu.Lock(); defer c.mu.Unlock(); return c.fechada })
+	if len(noNavegador) != 2 || !c.fechada {
+		t.Errorf("caiu depois de entrar: navegador=%v fechada=%v", noNavegador, c.fechada)
+	}
+
 	// --chrome, ou sem o visualizador instalado: direto no navegador
 	_ = c.abrirJanela("u1", true)
 	visualizador = filepath.Join(d, "nao-existe")
 	_ = c.abrirJanela("u2", false)
-	if len(noNavegador) != 3 {
+	if len(noNavegador) != 4 {
 		t.Errorf("navegador: %v", noNavegador)
 	}
 }

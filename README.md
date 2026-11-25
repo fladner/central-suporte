@@ -14,7 +14,11 @@ Substitui a primeira versão deste repositório (Flask), que ficou no histórico
   sem o navegador no caminho. O endereço de entrada vai pela entrada padrão, não pela
   linha de comando. A janela só mostra páginas de `http://127.0.0.1:<porta>`; e-mail e
   sites abrem no programa padrão. Sem o WebKitGTK (ou com `--chrome`), abre uma janela de
-  aplicativo do Chrome (`--app`); sem Chrome, o navegador padrão.
+  aplicativo do Chrome (`--app`); sem Chrome, o navegador padrão. Se a janela nativa cair
+  antes de entrar na Central, ela também passa para o Chrome. A janela usa a
+  acessibilidade do barramento da sessão do usuário (`org.a11y.Bus`), não o anunciado
+  na tela, que um programa aberto como root (Synaptic com `sudo`) troca pelo do root e
+  derrubava a janela; sem o barramento da sessão, abre sem a acessibilidade.
 - Os itens são os mesmos do `central_suporte.sh`: um `.desktop` por item em
   `/usr/local/seduc/central.d`, na ordem do nome do arquivo, com as mesmas regras:
   - `X-SEDUC-Acesso=admin`: só para o grupo sudo e os `GRUPOS_ADMIN` do `ad.conf`;

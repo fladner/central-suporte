@@ -7,21 +7,55 @@
 # O endereço de entrada (de uso único) chega pela entrada padrão, não pela linha de
 # comando, que outros usuários do computador podem ver no "ps".
 # Uso: echo URL | janela.py [--largura L --altura A --x X --y Y]
-# Saída 3: falta o WebKitGTK ou o GTK (a Central usa o Chrome no lugar).
+# Saída 3: falta o WebKitGTK ou o GTK (a Central usa o Chrome no lugar). Se a janela cair
+# (falha de segmentação ou outro erro), a Central também passa para o Chrome.
 
 import argparse
+import os
 import sys
 from urllib.parse import urlsplit
 
 SEM_BIBLIOTECA = 3
 
+
+def barramento_acessibilidade(Gio, GLib):
+    """Acessibilidade no barramento do próprio usuário, antes de carregar o GTK.
+
+    Sem AT_SPI_BUS_ADDRESS, a ponte de acessibilidade do GTK (atk-bridge) usa o barramento
+    anunciado na tela (propriedade AT_SPI_BUS do X). Um programa gráfico aberto como root
+    na sessão (Synaptic com sudo, por exemplo) anuncia o do root, em /root/.cache, e a
+    ponte cai (falha de segmentação) ao não conseguir entrar nele. Aqui o endereço vem da
+    sessão do usuário (org.a11y.Bus); sem ele, a janela abre sem a ponte.
+    """
+    if os.environ.get("AT_SPI_BUS_ADDRESS") or os.environ.get("NO_AT_BRIDGE"):
+        return
+    try:
+        sessao = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        resposta = sessao.call_sync(
+            "org.a11y.Bus", "/org/a11y/bus", "org.a11y.Bus", "GetAddress",
+            None, GLib.VariantType.new("(s)"), Gio.DBusCallFlags.NONE, 3000, None)
+        endereco = resposta.unpack()[0]
+    except Exception as erro:  # sem barramento da sessão ou sem o serviço de acessibilidade
+        print("central-janela: sem acessibilidade:", erro, file=sys.stderr)
+        endereco = ""
+    if endereco:
+        os.environ["AT_SPI_BUS_ADDRESS"] = endereco
+    else:
+        os.environ["NO_AT_BRIDGE"] = "1"
+
+
 try:
     import gi
+
+    gi.require_version("Gio", "2.0")
+    from gi.repository import Gio, GLib
+
+    barramento_acessibilidade(Gio, GLib)
 
     gi.require_version("Gtk", "3.0")
     gi.require_version("Gdk", "3.0")
     gi.require_version("WebKit2", "4.1")
-    from gi.repository import Gdk, Gio, GLib, Gtk, WebKit2
+    from gi.repository import Gdk, Gtk, WebKit2
 except (ImportError, ValueError) as erro:
     print("central-janela: sem WebKitGTK:", erro, file=sys.stderr)
     sys.exit(SEM_BIBLIOTECA)
