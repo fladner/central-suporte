@@ -115,6 +115,7 @@ pre.saida:empty { display: none; }
 /* Boas-vindas: escola, CREDE ou SEDUC (mostra só os campos do tipo marcado) */
 .boas-vindas-form select { width: 100%; max-width: 440px; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; font: inherit; background: var(--cartao); color: inherit; }
 .boas-vindas-form .linha { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.boas-vindas-exibir { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--borda); }
 .boas-vindas-form .linha input { max-width: 220px; }
 .boas-vindas-form:not(:has(input[name=tipo][value=escola]:checked)) .so-escola,
 .boas-vindas-form:not(:has(input[name=tipo][value=crede]:checked)) .so-crede { display: none; }

@@ -122,3 +122,39 @@ echo "--- Configurando"
 		t.Errorf("reiniciar: %d %v", w.Code, reiniciado)
 	}
 }
+
+// "Não mostrar mais ao entrar": marcar chama welcome.sh --ocultar, desmarcar --mostrar,
+// e a página mostra a caixa marcada quando o --listar devolve OCULTA.
+func TestBoasVindasOcultar(t *testing.T) {
+	c := novaCentral(t)
+	escrever(t, c.Itens, "10-bv.desktop", "[Desktop Entry]\nName=Boas-vindas e usuários\nExec=/bin/true\nX-SEDUC-Web=boas-vindas\nX-SEDUC-Acesso=todos\n")
+	marca := filepath.Join(t.TempDir(), "oculta")
+	executavelTeste(t, filepath.Join(c.Scripts, "welcome.sh"), `case "$1" in
+  --ocultar) touch `+marca+`; exit 0 ;;
+  --mostrar) rm -f `+marca+`; exit 0 ;;
+  --listar) [ -f `+marca+` ] && echo OCULTA; echo "USUARIO|aluno|Aluno|Laboratório|0"; exit 0 ;;
+esac
+exit 9
+`)
+	w := pedir(c, "GET", "/entrar/"+c.chave, c.endereco, "", nil)
+	ck := w.Result().Cookies()[0]
+	caixa := `name="oculta" value="sim" checked`
+	if corpo := pedir(c, "GET", "/pagina/boas-vindas", c.endereco, "", ck).Body.String(); !strings.Contains(corpo, "Não mostrar mais ao entrar") || strings.Contains(corpo, caixa) {
+		t.Fatalf("antes de marcar: %s", corpo)
+	}
+	if w := postarForm(c, "/pagina/boas-vindas/exibir", url.Values{"oculta": {"sim"}}, ck); w.Code != 303 {
+		t.Fatalf("marcar: %d %s", w.Code, w.Body.String())
+	}
+	if _, err := os.Stat(marca); err != nil {
+		t.Fatal("welcome.sh --ocultar não foi chamado")
+	}
+	if corpo := pedir(c, "GET", "/pagina/boas-vindas", c.endereco, "", ck).Body.String(); !strings.Contains(corpo, caixa) {
+		t.Errorf("depois de marcar: %s", corpo)
+	}
+	if w := postarForm(c, "/pagina/boas-vindas/exibir", url.Values{}, ck); w.Code != 303 {
+		t.Fatalf("desmarcar: %d", w.Code)
+	}
+	if _, err := os.Stat(marca); err == nil {
+		t.Error("welcome.sh --mostrar não foi chamado")
+	}
+}

@@ -87,6 +87,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Formulário de uma opção só (ex.: "Não mostrar mais ao entrar"): grava ao marcar
+  document.querySelectorAll("form[data-auto] input[type=checkbox]").forEach(function (c) {
+    c.addEventListener("change", function () { c.form.submit(); });
+  });
+
   var caixa = document.querySelector("[data-tarefa]");
   if (!caixa) return;
   var id = caixa.dataset.tarefa;

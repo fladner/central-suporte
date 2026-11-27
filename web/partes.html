@@ -19,7 +19,7 @@
     </div>
     <div class="maquina">
       <span>Computador <b>{{.Computador}}</b></span>
-      <span>Sistema SEDUC {{.Sistema}}</span>
+      <span>{{if .SistemaSEDUC}}Sistema SEDUC {{.Sistema}}{{else}}{{.Sistema}}{{end}}</span>
     </div>
   </div>
 </header>

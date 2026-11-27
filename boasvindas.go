@@ -45,6 +45,7 @@ type dadosBoasVindas struct {
 	Ambientes []ambiente
 	Credes    []string
 	Ident     identificacao
+	Oculta    bool // o administrador marcou "Não mostrar mais ao entrar"
 }
 
 // AmbientesDe: ambientes de um tipo, para a lista do formulário.
@@ -76,6 +77,8 @@ func lerBoasVindas(c *Central) dadosBoasVindas {
 		switch {
 		case l[0] == "LIVE":
 			d.Live = true
+		case l[0] == "OCULTA":
+			d.Oculta = true
 		case l[0] == "ERRO" && len(l) >= 2:
 			d.Erro = l[1]
 		case l[0] == "SISTEMA" && len(l) == 2:
@@ -221,6 +224,21 @@ var paginaBoasVindas = &Pagina{
 	},
 	Acoes: map[string]func(*Central, map[string]string) error{
 		"reiniciar": func(c *Central, _ map[string]string) error { return reiniciar() },
+	},
+	Formularios: map[string]func(*Central, *http.Request) error{
+		// "Não mostrar mais ao entrar": a marca é do próprio administrador (welcome.sh)
+		"exibir": func(c *Central, r *http.Request) error {
+			opcao := "--mostrar"
+			if r.PostFormValue("oculta") == "sim" {
+				opcao = "--ocultar"
+			}
+			ctx, cancelar := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancelar()
+			if err := exec.CommandContext(ctx, filepath.Join(c.Scripts, "welcome.sh"), opcao).Run(); err != nil {
+				return errFormulario("Não foi possível gravar a escolha.")
+			}
+			return nil
+		},
 	},
 	Consultas: map[string]func(*Central, *http.Request) any{
 		"inep": func(c *Central, r *http.Request) any {

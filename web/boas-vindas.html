@@ -28,6 +28,12 @@
     <p>Este é o Linux da Secretaria da Educação - SEDUC{{with .Sistema}}, baseado no <b>{{.}}</b>{{end}}.
     Agora vamos preparar este computador para uso: escolha quais usuários serão criados nele.</p>
   </div>
+  <form class="boas-vindas-exibir" method="post" action="/pagina/boas-vindas/exibir" data-auto>
+    <label class="opcao"><input type="checkbox" name="oculta" value="sim"{{if .Oculta}} checked{{end}}>
+      <span>Não mostrar mais ao entrar no computador</span>
+      <small>a tela continua na Central do Suporte, em Boas-vindas e usuários</small></label>
+    <noscript><button type="submit">Salvar</button></noscript>
+  </form>
   <form class="boas-vindas-form" method="post" action="/pagina/boas-vindas/iniciar" autocomplete="off">
     {{$tipo := or (index $.Form "tipo") .Ident.Tipo "escola"}}
     {{$amb := or (index $.Form "ambiente_escola") (index $.Form "ambiente_crede") .Ident.Ambiente}}

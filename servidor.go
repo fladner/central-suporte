@@ -194,6 +194,7 @@ func (c *Central) rotas(w http.ResponseWriter, r *http.Request) {
 type dados struct {
 	Titulo, Computador, Sistema, Versao, Perfil string
 	Admin                                       bool
+	SistemaSEDUC                                bool // Xubuntu SEDUC; senão, outro sabor com o .deb do AD
 	Itens                                       []Item
 	Pagina                                      *Pagina
 	NomePagina                                  string
@@ -205,16 +206,13 @@ type dados struct {
 
 func (c *Central) base(titulo string) dados {
 	nome, _ := os.Hostname()
-	sistema := "?"
-	if b, err := os.ReadFile("/usr/local/seduc/version"); err == nil {
-		sistema = strings.TrimSpace(string(b))
-	}
+	sistema, seduc := lerSistema()
 	admin := ehAdmin(c.AdConf)
 	perfil := "usuário (as ferramentas de administrador ficam ocultas)"
 	if admin {
 		perfil = "administrador"
 	}
-	return dados{Titulo: titulo, Computador: nome, Sistema: sistema, Versao: c.Versao, Perfil: perfil, Admin: admin}
+	return dados{Titulo: titulo, Computador: nome, Sistema: sistema, SistemaSEDUC: seduc, Versao: c.Versao, Perfil: perfil, Admin: admin}
 }
 
 func (c *Central) mostrar(w http.ResponseWriter, modelo string, d dados) {
@@ -410,4 +408,30 @@ func (c *Central) arquivo(w http.ResponseWriter, r *http.Request, caminho string
 		h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'")
 	}
 	http.ServeFile(w, r, caminho)
+}
+
+// Arquivos lidos para o cabeçalho (variáveis para os testes)
+var (
+	arquivoVersaoSEDUC = "/usr/local/seduc/version"
+	arquivoOSRelease   = "/etc/os-release"
+)
+
+// lerSistema: a versão do Xubuntu SEDUC ou, nos outros sabores do Ubuntu (Central levada
+// pelo .deb do AD), o nome do sistema do /etc/os-release.
+func lerSistema() (string, bool) {
+	if b, err := os.ReadFile(arquivoVersaoSEDUC); err == nil {
+		return strings.TrimSpace(string(b)), true
+	}
+	b, err := os.ReadFile(arquivoOSRelease)
+	if err != nil {
+		return "?", false
+	}
+	for _, l := range strings.Split(string(b), "\n") {
+		if v, ok := strings.CutPrefix(l, "PRETTY_NAME="); ok {
+			if v = strings.Trim(strings.TrimSpace(v), `"'`); v != "" {
+				return v, false
+			}
+		}
+	}
+	return "?", false
 }
